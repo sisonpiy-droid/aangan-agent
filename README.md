@@ -1,6 +1,6 @@
 # Aangan AI front desk (MESA Case 03)
 
-Every call to Aangan Studio is answered by a Vaani Labs voice agent, 24/7. After the call the backend
+Every call to Aangan Studio is answered by a Vaani Voice voice agent, 24/7. After the call the backend
 extracts the enquiry, **qualifies it with deterministic rules**, records it in Supabase, syncs it to
 HubSpot, gives qualified callers a Calendly link to book a real consultation slot, and hands off to
 humans on Telegram.
@@ -9,8 +9,8 @@ humans on Telegram.
 
 ```
             ┌──────────── call ────────────┐
-Caller ──► Vaani Labs (voice agent, en/hi) │
-            └─ call.completed / call.failed (HMAC) ─► /api/call-ended ─(waitUntil)─► processCall()
+Caller ──► Vaani Voice (voice agent, en/hi) │
+            └─ call_started / call_postprocessing (?key=) ─► /api/call-ended ─(waitUntil)─► processCall()
                                                          1. Gemini: transcript → lead JSON   (extraction only)
                                                          2. merge a redial from the same number ≤ 30 min
                                                          3. lib/rules.js → status            (sole authority)
@@ -26,7 +26,7 @@ Nikhil ──► dashboard (/api/stats, passcode) ─► "Retry failed syncs" �
 
 | Component | Owns | Never does |
 |---|---|---|
-| **Vaani Labs** | inbound calls, voice conversation (English `en-IN`, Hindi `hi-IN`; Marathi only if your account has it), signed end-of-call webhooks | decide a status; quote a price; state availability |
+| **Vaani Voice** | inbound calls, voice conversation (English, Hindi), post-call webhooks with transcript and entities | decide a status; quote a price; state availability |
 | **Gemini** | transcript → structured lead | decide a status |
 | **`lib/rules.js`** | `QUALIFIED` · `NEEDS_INFO` (live only) · `NEEDS_REVIEW` · `DECLINED` · `ESCALATE` | — |
 | **Supabase** | calls, transcripts, leads, statuses, HubSpot IDs, Calendly IDs, Telegram records, cost, audit trail | — |
@@ -78,14 +78,24 @@ All thresholds are named constants at the top of `lib/rules.js`, to tune with Ni
 
 ## Integrations
 
-### Vaani Labs
-- Webhooks: `call.completed` and `call.failed` → `POST /api/call-ended`. Header `X-VaaniYantra-Event`;
-  `X-VaaniYantra-Signature: sha256=<hex>` = HMAC-SHA256 of the raw body with the `whsec_…` secret
-  (constant-time compare; an unset secret rejects everything). 6 s timeout → reply 200 at once, finish in `waitUntil`.
-- Payload used: `id, direction, fromNumber (E.164), createdAt, durationSec, transcript[{role: AGENT|CALLER, text, atMs}],
-  collectedData{name, preferred_time}, recordingUrl`. A `data` envelope is accepted too. Outbound calls are ignored.
-- Webhook retries are harmless (the call id is checked before processing). `call.failed` → a call-back task.
-- **No dependence on mid-call custom functions** (not documented). `/api/check-lead` is an optional extra.
+### Vaani Voice
+Platform: **Vaani Voice** (app.vaanivoice.ai, docs at docs.vaanivoice.ai/guides/webhook-setup). The adapter is `lib/vaani.js`.
+- Webhook (Settings → Webhooks): `https://<app>/api/call-ended?key=<VAANI_WEBHOOK_SECRET>`. Vaani documents **no
+  signature**, so the secret is in the URL (constant-time compare; missing/wrong key or an unset secret → 401). Keep
+  that URL private.
+- `call_started` → `{ room_name, phone_number }` is saved in `events`. That's where the **caller ID** comes from:
+  `call_postprocessing` doesn't document a phone field (we use one if it's there).
+- `call_postprocessing` → `data.{ call_id, room_name, call_duration (milliseconds), transcript (text: "[hh:mm:ss] AGENT: …
+  USER: …"), entities {name, preferred_time}, summary, recording_url }` → parsed into AGENT/CALLER lines → pipeline.
+  The reply is immediate; processing finishes in `waitUntil`.
+- A call where the caller said nothing (failed or dropped; Vaani's `call_failed` is outbound-only) → empty transcript
+  → the call-back path (Telegram to designers when there's a caller ID).
+- `outbound-…` calls are ignored. Other events (`call_ended`, `user_picked_up_at`, transfers) are logged only.
+  A repeated `call_postprocessing` is processed once (the call id is checked first).
+- **To verify on the first real call:** that inbound `call_started` carries `phone_number` (the docs only show it on outbound).
+  The raw event is in `events`; if it's missing, fetch the number from Vaani's call-history API.
+- **No dependence on mid-call custom functions.** `/api/check-lead` is an optional extra. Don't enable Vaani's Cal.com
+  integration or a `schedule_callback` tool: both book specific slots on the call.
 - **Vaani's API has no SMS/WhatsApp send**, so it can't text the Calendly link (see Calendly → delivery).
 - No cost field is documented → cost = minutes × `VAANI_INR_PER_MIN` + Gemini tokens × rate.
 
@@ -172,7 +182,8 @@ Every message sent is recorded in `events` (`source = telegram`, `external_id = 
 
 See `.env.example`. **Secrets** (never in the repo or in chat): `VAANI_WEBHOOK_SECRET`, `GEMINI_API_KEY`,
 `SUPABASE_SERVICE_ROLE_KEY`, `HUBSPOT_SERVICE_KEY`, `CALENDLY_TOKEN`, `CALENDLY_WEBHOOK_SIGNING_KEY`,
-`TELEGRAM_BOT_TOKEN`, `DASHBOARD_PASSCODE`, `CHECK_LEAD_SECRET`. The last three are generated by `npm run secrets`.
+`TELEGRAM_BOT_TOKEN`, `DASHBOARD_PASSCODE`, `CHECK_LEAD_SECRET`. `npm run secrets` generates `VAANI_WEBHOOK_SECRET`,
+`CALENDLY_WEBHOOK_SIGNING_KEY`, `DASHBOARD_PASSCODE` and `CHECK_LEAD_SECRET`.
 **Not secret:** URLs, IDs, chat IDs, rates.
 
 ## Setup
@@ -189,9 +200,10 @@ See `.env.example`. **Secrets** (never in the repo or in chat): `VAANI_WEBHOOK_S
    field on), put the token in `.env`, run `npm run calendly:setup`, and copy the event type URL into
    `CALENDLY_EVENT_URL_RESIDENTIAL` (and `_COMMERCIAL` if separate). *Optional, paid plans only:* run it again to create
    the webhook, then set `CALENDLY_WEBHOOKS_ENABLED=true`.
-7. **Vaani Labs:** paste `prompt/agent.md` into the agent, attach the inbound number, add the webhook
-   `https://<app>/api/call-ended` for `call.completed` + `call.failed`, and put its signing secret in `VAANI_WEBHOOK_SECRET`
-   (in Vercel too).
+7. **Vaani Voice:** paste `prompt/agent.md` into the agent (greeting "Hello, Aangan Studio. How can I help you today?",
+   extraction fields `name` and `preferred_time` with no defaults, no `schedule_callback` tool, no Cal.com integration),
+   attach the inbound number in Telephony, and in **Settings → Webhooks** add
+   `https://<app>/api/call-ended?key=<VAANI_WEBHOOK_SECRET from .env>`.
 
 ## Run and test
 

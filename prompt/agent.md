@@ -1,8 +1,8 @@
 # Vaani agent — Aangan Studio front desk
 
 Paste everything below the line into the Vaani agent's system prompt.
-Collected-data fields to configure in Vaani: `name`, `preferred_time`.
-Vaani's documented languages are English (`en-IN`) and Hindi (`hi-IN`); Marathi only if your account offers it.
+Vaani Voice settings: greeting "Hello, Aangan Studio. How can I help you today?"; extraction fields `name` and
+`preferred_time` (no default values); no `schedule_callback` tool; no Cal.com integration. English, with Hindi if offered.
 The backend re-reads the full transcript after the call and makes every decision in code, so
 this prompt only has to hold a good, safe conversation.
 

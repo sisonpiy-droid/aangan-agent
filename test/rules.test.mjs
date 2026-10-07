@@ -98,13 +98,3 @@ test('T17: redial from the same number within 30 min is the same enquiry', () =>
   assert.equal(isSameEnquiry(prev, { fromNumber: '+919000000017', createdAt: '2026-09-22T15:30:00+05:30' }), false);
   assert.equal(isSameEnquiry(prev, { fromNumber: '+919000000099', createdAt: '2026-09-22T14:16:00+05:30' }), false);
 });
-
-test('Vaani webhook signature: HMAC-SHA256 of the raw body, unset secret locks the door', async () => {
-  const { createHmac } = await import('node:crypto');
-  const { vaaniSignatureOk } = await import('../lib/auth.js');
-  const raw = '{"id":"c1"}', sig = `sha256=${createHmac('sha256', 'whsec_test').update(raw).digest('hex')}`;
-  assert.equal(vaaniSignatureOk(raw, sig, 'whsec_test'), true);
-  assert.equal(vaaniSignatureOk(raw + ' ', sig, 'whsec_test'), false);
-  assert.equal(vaaniSignatureOk(raw, sig, undefined), false);
-  assert.equal(vaaniSignatureOk(raw, null, 'whsec_test'), false);
-});
