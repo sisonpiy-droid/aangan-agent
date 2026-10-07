@@ -1,0 +1,100 @@
+{
+  "_note": "September 2026 phone transcripts from the case material, reshaped as Vaani call.completed payloads. Front desk lines are AGENT. Phone numbers are placeholders.",
+  "T01": { "id": "sim-T01", "direction": "INBOUND", "fromNumber": "+919000000001", "createdAt": "2026-09-02T10:23:00+05:30", "durationSec": 252, "transcript": [
+    { "role": "AGENT", "text": "Good morning, Aangan Studio." },
+    { "role": "CALLER", "text": "Hi, I'm Priya. I got your number from a friend — Shruti Joshi. She had her flat done by you in Aundh." },
+    { "role": "AGENT", "text": "Of course — thank you for calling. What are you looking to do?" },
+    { "role": "CALLER", "text": "We have a 3BHK in Kothrud — Dahanukar Colony. We bought it two years ago and it still looks like the builder flat. We want to redo the whole thing — kitchen, living room, both bedrooms." },
+    { "role": "AGENT", "text": "That sounds like a complete redesign. How big is the apartment?" },
+    { "role": "CALLER", "text": "About 1,400 sq ft carpet." },
+    { "role": "AGENT", "text": "And your timeline?" },
+    { "role": "CALLER", "text": "We'd like to be done by March. We're in no rush." },
+    { "role": "AGENT", "text": "Perfect. Are you the owner?" },
+    { "role": "CALLER", "text": "Yes — myself and my husband. He knows we're calling and is happy to go ahead." },
+    { "role": "AGENT", "text": "Lovely. Can I take your number and schedule a consultation?" },
+    { "role": "CALLER", "text": "Sure." }
+  ]},
+  "T03": { "id": "sim-T03", "direction": "INBOUND", "fromNumber": "+919000000003", "createdAt": "2026-09-03T16:15:00+05:30", "durationSec": 160, "transcript": [
+    { "role": "AGENT", "text": "Good afternoon, Aangan Studio." },
+    { "role": "CALLER", "text": "Hello, I saw your work on LinkedIn. My name is Suresh Patil. I'm in Nashik — would you be able to take on a project here? I want to redo my home office and study." },
+    { "role": "AGENT", "text": "Thank you for calling. We only work in Pune and PCMC at the moment — we don't have the vendor network to take on projects outside Pune." },
+    { "role": "CALLER", "text": "Not even for a smaller project?" },
+    { "role": "AGENT", "text": "Even for a smaller project, our execution depends on our contractors being on-site. I'm sorry we can't help." },
+    { "role": "CALLER", "text": "Alright, understood. Thanks." }
+  ]},
+  "T04": { "id": "sim-T04", "direction": "INBOUND", "fromNumber": "+919000000004", "createdAt": "2026-09-04T11:07:00+05:30", "durationSec": 202, "transcript": [
+    { "role": "AGENT", "text": "Good morning, Aangan Studio." },
+    { "role": "CALLER", "text": "Hi — can someone come and give us some ideas for our living room? We're not planning to do the full thing right now. Just want suggestions on colours, furniture arrangement, what to change." },
+    { "role": "AGENT", "text": "We're a full-service studio — our projects include design and execution together. We don't do advisory or consultation-only visits. If you're planning a full redesign with execution, we'd be a great fit." },
+    { "role": "CALLER", "text": "Oh I see. No, we're just exploring for now. Maybe later." },
+    { "role": "AGENT", "text": "Of course — feel free to call back when you're ready to go ahead with a full project." }
+  ]},
+  "T07": { "id": "sim-T07", "direction": "INBOUND", "fromNumber": "+919000000007", "createdAt": "2026-09-08T09:44:00+05:30", "durationSec": 195, "transcript": [
+    { "role": "AGENT", "text": "Good morning, Aangan Studio." },
+    { "role": "CALLER", "text": "Hello — I want to redo my living room and kitchen before Diwali. Can you take it up?" },
+    { "role": "AGENT", "text": "Diwali is about three weeks away. Our design phase alone takes 3–4 weeks, and execution follows. We couldn't do justice to a project in that time." },
+    { "role": "CALLER", "text": "Even just the living room?" },
+    { "role": "AGENT", "text": "Even so — a room redesign with execution takes at least 8–10 weeks from start to finish. We wouldn't want to rush it." },
+    { "role": "CALLER", "text": "What if I start after Diwali?" },
+    { "role": "AGENT", "text": "A November start would work well. Shall I note your details for that?" },
+    { "role": "CALLER", "text": "Let me think and call back." }
+  ]},
+  "T09": { "id": "sim-T09", "direction": "INBOUND", "fromNumber": "+919000000009", "createdAt": "2026-09-10T11:32:00+05:30", "durationSec": 352, "transcript": [
+    { "role": "AGENT", "text": "Good morning, Aangan Studio." },
+    { "role": "CALLER", "text": "I need to speak to someone right now. My project has been going for three months and my designer hasn't replied in five days. This is not acceptable." },
+    { "role": "AGENT", "text": "I'm very sorry. Can I take your name and project details?" },
+    { "role": "CALLER", "text": "Sheetal Deshpande. My designer is Aryan. Flat in Viman Nagar — 2BHK. I've sent three messages and called twice." },
+    { "role": "AGENT", "text": "Sheetal, I'm getting this to our project team right now. Would you prefer to hold, or should I have someone senior call you back?" },
+    { "role": "CALLER", "text": "Callback. And I want it from Nikhil or a senior person — not just whoever picks up." },
+    { "role": "AGENT", "text": "Noted. I'll make sure of that." }
+  ]},
+  "T10": { "id": "sim-T10", "direction": "INBOUND", "fromNumber": "+919000000010", "createdAt": "2026-09-11T14:04:00+05:30", "durationSec": 220, "transcript": [
+    { "role": "AGENT", "text": "Good afternoon, Aangan Studio." },
+    { "role": "CALLER", "text": "Hi. I have a 1BHK in Kharadi — about 550 sq ft. I want to do the kitchen and one bedroom. My budget is 1 to 1.5 lakh maximum for everything. Is that possible with you?" },
+    { "role": "AGENT", "text": "I appreciate you sharing that. For a kitchen redesign and a bedroom with full execution — materials, furniture, and contractor work — 1 to 1.5 lakh would be significantly below what a project of that scope would cost with us." },
+    { "role": "CALLER", "text": "Even for one bedroom?" },
+    { "role": "AGENT", "text": "Even for one room. I wouldn't want to bring you to a consultation if the numbers don't align. I'd suggest checking with local contractors who work at that price point." },
+    { "role": "CALLER", "text": "Okay, thank you for being straight." }
+  ]},
+  "T11": { "id": "sim-T11", "direction": "INBOUND", "fromNumber": "+919000000011", "createdAt": "2026-09-12T10:18:00+05:30", "durationSec": 382, "transcript": [
+    { "role": "AGENT", "text": "Good morning, Aangan Studio." },
+    { "role": "CALLER", "text": "Hi — I have a question. I'm in a rented apartment. Can you still take up a project?" },
+    { "role": "AGENT", "text": "It depends on the scope. What are you looking to do?" },
+    { "role": "CALLER", "text": "It's a 2BHK in Baner. I've been here a year, I have a 3-year lease, and the place is quite bare. I want to properly design the living room, bedroom, and kitchen — no structural changes, just design and fittings." },
+    { "role": "AGENT", "text": "That's fine — we've done rented apartments before. For the kitchen we'd do a modular unit that can come out cleanly. The rest is largely flooring, lighting, and furniture — all reversible. Have you checked with your landlord?" },
+    { "role": "CALLER", "text": "Yes — they're fine with it as long as we don't break walls." },
+    { "role": "AGENT", "text": "Perfect. No wall-breaking from us. Shall we set up a consultation?" },
+    { "role": "CALLER", "text": "Yes please." }
+  ]},
+  "T14": { "id": "sim-T14", "direction": "INBOUND", "fromNumber": "+919000000014", "createdAt": "2026-09-17T11:41:00+05:30", "durationSec": 295, "transcript": [
+    { "role": "AGENT", "text": "Good morning, Aangan Studio." },
+    { "role": "CALLER", "text": "Hi — I wanted to inquire about an interior project for my parents. They have a 3BHK in Hadapsar — new possession. They want a proper design." },
+    { "role": "AGENT", "text": "That sounds good. Will your parents be involved in the decision?" },
+    { "role": "CALLER", "text": "Yes — I'm doing the initial checking. They don't really use phones much. I'll tell them about the consultation and they'll decide." },
+    { "role": "AGENT", "text": "Sure — just so we know: your parents would be at the consultation, right? Our designers like to understand the brief directly from the people who'll live in the space." },
+    { "role": "CALLER", "text": "Yes, they would come. I'm just calling to see if it's worth pursuing." },
+    { "role": "AGENT", "text": "Absolutely. Should I note your details and explain what the consultation involves?" },
+    { "role": "CALLER", "text": "Please." }
+  ]},
+  "T17a": { "id": "sim-T17a", "direction": "INBOUND", "fromNumber": "+919000000017", "createdAt": "2026-09-22T14:14:00+05:30", "durationSec": 72, "transcript": [
+    { "role": "AGENT", "text": "Good afternoon, Aangan Studio." },
+    { "role": "CALLER", "text": "Hi, I wanted to inquire about —" }
+  ]},
+  "T17b": { "id": "sim-T17b", "direction": "INBOUND", "fromNumber": "+919000000017", "createdAt": "2026-09-22T14:16:00+05:30", "durationSec": 270, "transcript": [
+    { "role": "AGENT", "text": "Good afternoon, Aangan Studio." },
+    { "role": "CALLER", "text": "Hi — I called just now and got cut off. I'm Ritu Kapoor from Pimple Saudagar. 3BHK, about 1,050 sq ft. We've been here two years but never properly did the interiors. We want to start now." },
+    { "role": "AGENT", "text": "Thanks for calling back. Pimple Saudagar is in our service area. What are you looking to do?" },
+    { "role": "CALLER", "text": "Kitchen, wardrobes, living room. We moved in with builder furniture and it's very basic." },
+    { "role": "AGENT", "text": "Standard full-home scope. Timeline?" },
+    { "role": "CALLER", "text": "Ideally done by March. Plenty of time." },
+    { "role": "AGENT", "text": "Perfect. Let me book a consultation." }
+  ]},
+  "T19": { "id": "sim-T19", "direction": "INBOUND", "fromNumber": "+919000000019", "createdAt": "2026-09-24T16:02:00+05:30", "durationSec": 170, "transcript": [
+    { "role": "AGENT", "text": "Good afternoon, Aangan Studio." },
+    { "role": "CALLER", "text": "Hi — I'm planning to open a restaurant in Koregaon Park. I've seen your work and I love it. Would you be able to design the interiors?" },
+    { "role": "AGENT", "text": "We appreciate you reaching out. Restaurant and hospitality interiors are outside our current scope — we focus on residential and office spaces." },
+    { "role": "CALLER", "text": "Do you know anyone you could refer?" },
+    { "role": "AGENT", "text": "I don't have a specific referral I could make confidently, but searching for hospitality interior designers in Pune would give you more relevant options." },
+    { "role": "CALLER", "text": "Alright, thanks." }
+  ]}
+}

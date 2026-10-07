@@ -1,0 +1,20 @@
+{
+  "name": "aangan-agent",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test",
+    "test:live": "node --env-file-if-exists=.env scripts/eval-extract.mjs",
+    "simulate": "node --env-file-if-exists=.env scripts/simulate.mjs",
+    "dev": "node --env-file-if-exists=.env scripts/dev.mjs",
+    "hubspot:setup": "node --env-file-if-exists=.env scripts/hubspot-setup.mjs",
+    "calendly:setup": "node --env-file-if-exists=.env scripts/calendly-setup.mjs",
+    "secrets": "node scripts/gen-secrets.mjs"
+  },
+  "dependencies": {
+    "@vercel/functions": "^3.9.11"
+  }
+}

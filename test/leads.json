@@ -1,0 +1,141 @@
+[
+  {
+    "id": "T01", "at": "2026-09-02T10:23:00+05:30",
+    "expect": { "status": "QUALIFIED", "reasons": [], "notes": [] },
+    "lead": { "intent": "new_enquiry", "name": "Priya", "project_kind": "design_and_execution", "segment": "residential", "business_type": null,
+      "city": "pune", "locality": "Kothrud", "carpet_sqft": 1400, "rooms_in_scope": ["kitchen", "living room", "bedroom", "bedroom"],
+      "structural_changes": "no", "rented": false, "deadline_date": "2027-03-31", "site_available_date": null,
+      "budget_min": null, "budget_max": null, "decision_maker": "yes", "preferred_slot": null, "referral": "Shruti Joshi (past client, Aundh)", "caller_notes": null }
+  },
+  {
+    "id": "T03", "at": "2026-09-03T16:15:00+05:30",
+    "expect": { "status": "DECLINED", "reasons": ["OUT_OF_AREA"] },
+    "lead": { "intent": "new_enquiry", "name": "Suresh Patil", "project_kind": "design_and_execution", "segment": "residential", "business_type": null,
+      "city": "other", "locality": "Nashik", "carpet_sqft": null, "rooms_in_scope": ["home office", "study"],
+      "structural_changes": null, "rented": false, "deadline_date": null, "site_available_date": null,
+      "budget_min": null, "budget_max": null, "decision_maker": null, "preferred_slot": null, "referral": "LinkedIn", "caller_notes": null }
+  },
+  {
+    "id": "T04", "at": "2026-09-04T11:07:00+05:30",
+    "expect": { "status": "DECLINED", "reasons": ["NOT_A_FULL_PROJECT"] },
+    "lead": { "intent": "new_enquiry", "name": null, "project_kind": "advice_only", "segment": "residential", "business_type": null,
+      "city": null, "locality": null, "carpet_sqft": null, "rooms_in_scope": ["living room"],
+      "structural_changes": null, "rented": false, "deadline_date": null, "site_available_date": null,
+      "budget_min": null, "budget_max": null, "decision_maker": null, "preferred_slot": null, "referral": null, "caller_notes": "just exploring" }
+  },
+  {
+    "id": "T07", "at": "2026-09-08T09:44:00+05:30",
+    "expect": { "status": "DECLINED", "reasons": ["TIMELINE_TOO_SHORT"] },
+    "lead": { "intent": "new_enquiry", "name": null, "project_kind": "design_and_execution", "segment": "residential", "business_type": null,
+      "city": null, "locality": null, "carpet_sqft": null, "rooms_in_scope": ["living room", "kitchen"],
+      "structural_changes": null, "rented": false, "deadline_date": "2026-09-29", "site_available_date": null,
+      "budget_min": null, "budget_max": null, "decision_maker": null, "preferred_slot": null, "referral": null, "caller_notes": "wanted it before Diwali; may call back for a November start" }
+  },
+  {
+    "id": "T09", "at": "2026-09-10T11:32:00+05:30",
+    "expect": { "status": "ESCALATE", "reasons": ["EXISTING_CLIENT"] },
+    "lead": { "intent": "existing_client", "name": "Sheetal Deshpande", "project_kind": null, "segment": "residential", "business_type": null,
+      "city": "pune", "locality": "Viman Nagar", "carpet_sqft": null, "rooms_in_scope": [],
+      "structural_changes": null, "rented": false, "deadline_date": null, "site_available_date": null,
+      "budget_min": null, "budget_max": null, "decision_maker": null, "preferred_slot": null, "referral": null,
+      "caller_notes": "Existing project, designer Aryan has not replied in five days. Wants a callback from Nikhil or a senior person." }
+  },
+  {
+    "id": "T10", "at": "2026-09-11T14:04:00+05:30",
+    "expect": { "status": "DECLINED", "reasons": ["BUDGET_CLEARLY_BELOW"] },
+    "lead": { "intent": "new_enquiry", "name": null, "project_kind": "design_and_execution", "segment": "residential", "business_type": null,
+      "city": "pune", "locality": "Kharadi", "carpet_sqft": 550, "rooms_in_scope": ["kitchen", "bedroom"],
+      "structural_changes": null, "rented": false, "deadline_date": null, "site_available_date": null,
+      "budget_min": 100000, "budget_max": 150000, "decision_maker": null, "preferred_slot": null, "referral": null, "caller_notes": null }
+  },
+  {
+    "id": "T11", "at": "2026-09-12T10:18:00+05:30",
+    "_note": "The front desk never asked the timeline. The agent asks it; this fixture assumes the caller says there is no fixed deadline (3-year lease).",
+    "expect": { "status": "QUALIFIED", "reasons": [], "notes": ["RENTED"] },
+    "lead": { "intent": "new_enquiry", "name": null, "project_kind": "design_and_execution", "segment": "residential", "business_type": null,
+      "city": "pune", "locality": "Baner", "carpet_sqft": null, "rooms_in_scope": ["living room", "bedroom", "kitchen"],
+      "structural_changes": "no", "rented": true, "deadline_date": "none", "site_available_date": null,
+      "budget_min": null, "budget_max": null, "decision_maker": "yes", "preferred_slot": null, "referral": null, "caller_notes": "Landlord agreed as long as no walls are broken." }
+  },
+  {
+    "id": "T14", "at": "2026-09-17T11:41:00+05:30",
+    "_note": "Timeline not asked by the front desk; fixture assumes no fixed deadline (new possession).",
+    "expect": { "status": "QUALIFIED", "reasons": [], "notes": ["DECISION_MAKER_REP"] },
+    "lead": { "intent": "new_enquiry", "name": null, "project_kind": "design_and_execution", "segment": "residential", "business_type": null,
+      "city": "pune", "locality": "Hadapsar", "carpet_sqft": null, "rooms_in_scope": [],
+      "structural_changes": null, "rented": false, "deadline_date": "none", "site_available_date": null,
+      "budget_min": null, "budget_max": null, "decision_maker": "authorised_rep", "preferred_slot": null, "referral": null,
+      "caller_notes": "Caller is the son. Parents own the 3BHK, decide, and will attend the consultation." }
+  },
+  {
+    "id": "T17", "at": "2026-09-22T14:16:00+05:30",
+    "_note": "Combined lead after merging the dropped 14:14 call with the 14:16 redial.",
+    "expect": { "status": "QUALIFIED", "reasons": [], "notes": ["DECISION_MAKER_UNCLEAR"] },
+    "lead": { "intent": "new_enquiry", "name": "Ritu Kapoor", "project_kind": "design_and_execution", "segment": "residential", "business_type": null,
+      "city": "pcmc", "locality": "Pimple Saudagar", "carpet_sqft": 1050, "rooms_in_scope": ["kitchen", "wardrobes", "living room"],
+      "structural_changes": null, "rented": false, "deadline_date": "2027-03-31", "site_available_date": null,
+      "budget_min": null, "budget_max": null, "decision_maker": null, "preferred_slot": null, "referral": null, "caller_notes": null }
+  },
+  {
+    "id": "T19", "at": "2026-09-24T16:02:00+05:30",
+    "expect": { "status": "DECLINED", "reasons": ["BUSINESS_TYPE_OUT_OF_SCOPE"] },
+    "lead": { "intent": "new_enquiry", "name": null, "project_kind": "design_and_execution", "segment": "commercial", "business_type": "restaurant",
+      "city": "pune", "locality": "Koregaon Park", "carpet_sqft": null, "rooms_in_scope": [],
+      "structural_changes": null, "rented": false, "deadline_date": null, "site_available_date": null,
+      "budget_min": null, "budget_max": null, "decision_maker": null, "preferred_slot": null, "referral": null, "caller_notes": null }
+  },
+  {
+    "id": "F05", "at": "2026-09-11T10:05:00+05:30",
+    "expect": { "status": "QUALIFIED", "reasons": [], "notes": ["DECISION_MAKER_UNCLEAR", "HIGH_VALUE"] },
+    "lead": { "intent": "new_enquiry", "name": "Sheena Menon (Operations Head, NovaSpark Technologies)", "project_kind": "design_and_execution", "segment": "commercial", "business_type": "office",
+      "city": "pcmc", "locality": "Hinjewadi Phase 1", "carpet_sqft": 2200, "rooms_in_scope": [],
+      "structural_changes": null, "rented": false, "deadline_date": "2027-01-15", "site_available_date": null,
+      "budget_min": 6000000, "budget_max": 8000000, "decision_maker": null, "preferred_slot": null,
+      "referral": "CEO previously worked with Aangan (Amey Joshi, Innov8 office, Baner)",
+      "caller_notes": "55 workstations, 4 cabins, boardroom, 2 meeting rooms, lounge, pantry. Speed matters." }
+  },
+  {
+    "id": "F08", "at": "2026-09-18T18:44:00+05:30",
+    "expect": { "status": "DECLINED", "reasons": ["TIMELINE_TOO_SHORT"] },
+    "lead": { "intent": "new_enquiry", "name": "Divya Hegde", "project_kind": "design_and_execution", "segment": "residential", "business_type": null,
+      "city": "pune", "locality": "Wakad", "carpet_sqft": 875, "rooms_in_scope": ["living room", "kitchen"],
+      "structural_changes": null, "rented": false, "deadline_date": "2026-10-09", "site_available_date": null,
+      "budget_min": 400000, "budget_max": 500000, "decision_maker": null, "preferred_slot": null, "referral": "Google", "caller_notes": "Guests arriving from the US in 3 weeks." }
+  },
+  {
+    "id": "F10", "at": "2026-09-26T16:22:00+05:30",
+    "expect": { "status": "QUALIFIED", "reasons": [], "notes": ["BUDGET_MAY_BE_TIGHT"] },
+    "lead": { "intent": "new_enquiry", "name": "Siddharth Gupta", "project_kind": "design_and_execution", "segment": "residential", "business_type": null,
+      "city": "pune", "locality": "Aundh", "carpet_sqft": 1300, "rooms_in_scope": [],
+      "structural_changes": null, "rented": false, "deadline_date": "none", "site_available_date": null,
+      "budget_min": 1800000, "budget_max": 2200000, "decision_maker": "yes", "preferred_slot": null, "referral": "LinkedIn",
+      "caller_notes": "Both product designers, will be opinionated. Want a collaborative process, not one option. Need two home workspaces." }
+  },
+  {
+    "id": "F03", "at": "2026-09-06T11:18:00+05:30",
+    "_note": "City deliberately 'pune' ('near Pune') to prove the locality exclusion list catches Talegaon.",
+    "expect": { "status": "DECLINED", "reasons": ["OUT_OF_AREA"] },
+    "lead": { "intent": "new_enquiry", "name": "Nilesh Dhamdhere", "project_kind": "design_and_execution", "segment": "residential", "business_type": null,
+      "city": "pune", "locality": "Talegaon Dabhade", "carpet_sqft": 1400, "rooms_in_scope": [],
+      "structural_changes": null, "rented": false, "deadline_date": "none", "site_available_date": null,
+      "budget_min": 1500000, "budget_max": 2000000, "decision_maker": "yes", "preferred_slot": null, "referral": "Google", "caller_notes": null }
+  },
+  {
+    "id": "F06", "at": "2026-09-14T20:52:00+05:30",
+    "_note": "Site only available Feb 2027 (~20 weeks). Literal §3 reading would reject a strong lead, so it goes to review instead.",
+    "expect": { "status": "NEEDS_REVIEW", "reasons": ["SITE_AVAILABLE_LATE"] },
+    "lead": { "intent": "new_enquiry", "name": "Preethi Nair", "project_kind": "design_and_execution", "segment": "residential", "business_type": null,
+      "city": "pune", "locality": "NIBM Road", "carpet_sqft": 1950, "rooms_in_scope": [],
+      "structural_changes": null, "rented": false, "deadline_date": "none", "site_available_date": "2027-02-01",
+      "budget_min": 3500000, "budget_max": 4000000, "decision_maker": "yes", "preferred_slot": null, "referral": "Pune Mirror article", "caller_notes": "Shortlisted 3 studios; likes warm, earthy, minimal." }
+  },
+  {
+    "id": "T18", "at": "2026-09-23T11:55:00+05:30",
+    "_note": "City and deadline set so only the size rule is under test.",
+    "expect": { "status": "NEEDS_REVIEW", "reasons": ["COMMERCIAL_UNDER_500_UNDOCUMENTED"] },
+    "lead": { "intent": "new_enquiry", "name": null, "project_kind": "design_and_execution", "segment": "commercial", "business_type": "office",
+      "city": "pune", "locality": null, "carpet_sqft": 180, "rooms_in_scope": ["coworking pod"],
+      "structural_changes": null, "rented": false, "deadline_date": "none", "site_available_date": null,
+      "budget_min": null, "budget_max": null, "decision_maker": "yes", "preferred_slot": null, "referral": null, "caller_notes": null }
+  }
+]
