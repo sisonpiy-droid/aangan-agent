@@ -41,7 +41,7 @@ const dealUpserts = () => net.filter(n => n.to === 'hubspot' && n.path.includes(
 let seq = 0;
 const call = (key, extra = {}) => ({ ...calls[key], id: `e2e-${key}-${++seq}`, ...extra });
 
-test('qualified → Calendly link → HubSpot deal → Telegram with the one-tap WhatsApp button (webhooks unavailable)', async () => {
+test('qualified → Calendly link → HubSpot deal → Telegram with the booking link (webhooks unavailable)', async () => {
   net = [];
   const row = await processCall(call('T01'), as('T01'));
   assert.equal(row.status, 'QUALIFIED');
@@ -51,8 +51,8 @@ test('qualified → Calendly link → HubSpot deal → Telegram with the one-tap
   assert.equal(deal.aangan_consultation_status, undefined); // manual mode: never overwrite a designer's HubSpot edit
   const [t] = telegrams();
   assert.equal(t.chat, 'designers');
-  assert.match(t.text, /Send booking link on WhatsApp/);
-  assert.match(t.text, /https:\/\/wa\.me\/919000000001\?text=/);
+  assert.match(t.text, /Booking link: https:\/\/calendly\.com/);
+  assert.doesNotMatch(t.text, /WhatsApp|wa\.me/);
   assert.match(t.text, /not tracked automatically/);
   assert.match(t.text, /Open in HubSpot/);
   assert.ok(row.notified_at);

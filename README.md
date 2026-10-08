@@ -96,7 +96,7 @@ Platform: **Vaani Voice** (app.vaanivoice.ai, docs at docs.vaanivoice.ai/guides/
   The raw event is in `events`; if it's missing, fetch the number from Vaani's call-history API.
 - **No dependence on mid-call custom functions.** `/api/check-lead` is an optional extra. Don't enable Vaani's Cal.com
   integration or a `schedule_callback` tool: both book specific slots on the call.
-- **Vaani's API has no SMS/WhatsApp send**, so it can't text the Calendly link (see Calendly → delivery).
+- **Vaani's API has no SMS send**, so it can't text the Calendly link (see Calendly → delivery). WhatsApp is not used anywhere.
 - No cost field is documented → cost = minutes × `VAANI_INR_PER_MIN` + Gemini tokens × rate.
 
 ### HubSpot (service key)
@@ -156,12 +156,9 @@ name/email prefilled. `consultation_status = link_ready`.
 
 | Option | Status |
 |---|---|
-| **One-tap WhatsApp** from the designer's Telegram note (`wa.me` with the message prefilled, sent from the designer's own phone) | ✅ built, works today |
 | **One-tap email** (`mailto:` with the link prefilled) when the caller gave an address; the agent offers it once before closing | ✅ built, still one tap by a designer |
 | Link also on the HubSpot deal and in the task | ✅ built |
-| **Fully automatic WhatsApp via Vaani's WhatsApp integration** (Settings → Integrations → WhatsApp) | ⏳ not built: Vaani documents it for inbound WhatsApp conversations, with no outbound message API. Check whether your account can send a message after a call. |
 | **Fully automatic email via HubSpot** | ❌ not possible here: sending email from HubSpot's API needs the paid Marketing Hub transactional add-on or a Sales Hub workflow/sequence |
-| Fully automatic WhatsApp through Meta's WhatsApp Cloud API directly | possible later, as a sixth system (needs a verified business and approved message template) |
 
 On the call the agent says exactly: *"A designer will send you a link where you can choose a convenient
 consultation time."* It never names or promises a time; only Calendly's own page shows availability.
@@ -194,7 +191,7 @@ When webhooks are on (`POST /api/calendly-webhook`, events `invitee.created` + `
 
 | Trigger | To | Contains |
 |---|---|---|
-| `QUALIFIED` | designers group | **Next task**, Vaani's summary, full brief, WhatsApp/email booking-link buttons, HubSpot + lead-page links, and the **full transcript as an attached `.txt`** (a reply to the note) |
+| `QUALIFIED` | designers group | **Next task**, Vaani's summary, full brief, booking link with a one-tap email button, HubSpot + lead-page links, and the **full transcript as an attached `.txt`** (a reply to the note) |
 | `ESCALATE` | Nikhil | the same: next task (call back within 15 min), summary, transcript file |
 | Failed or dropped call **with caller ID** | designers group | 📞 CALL BACK + tap-to-call number, next task |
 | Failed call **without** caller ID | none | (dashboard + HubSpot "Needs review") |
@@ -256,8 +253,8 @@ npm run test:live                   Gemini extraction on the real transcripts vs
 npm run dev                         dashboard + API on http://localhost:3400 (memory store, demo data, passcode "demo")
 ```
 
-## Extending to WhatsApp and the web form (not built)
+## Extending to a web form (not built)
 
-Both feed the same `processCall()`: a WhatsApp thread is a transcript, and a web form is a lead that skips
-extraction (its fields map one-to-one). A WhatsApp Business API sender could later replace the one-tap
-booking-link button with an automatic message. The rules, HubSpot, Calendly, Telegram and the dashboard stay unchanged.
+A web form is a lead that skips extraction (its fields map one-to-one) and feeds the same `processCall()`.
+The rules, HubSpot, Calendly, Telegram and the dashboard stay unchanged.
+

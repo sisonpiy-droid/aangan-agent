@@ -192,7 +192,7 @@ test('a link Telegram cannot parse → the handoff is resent as plain text, neve
   assert.equal(note.mode, undefined);
   assert.doesNotMatch(note.text, /<b>|<a href/);
   assert.match(note.text, /Next task: Send the Calendly link/);
-  assert.ok(note.text.includes(`Send booking link on WhatsApp (https://wa.me/${row.phone.replace('+', '')}?text=`), 'the WhatsApp link survives the plain-text resend');
+  assert.ok(note.text.includes('Booking link: https://calendly.com'), 'the booking link survives the plain-text resend');
 });
 
 test('lead page API: passcode, transcript, next task and timeline', async () => {
