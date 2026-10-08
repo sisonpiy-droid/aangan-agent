@@ -43,6 +43,10 @@
   #login { max-width: 320px; margin: 15vh auto; display: grid; gap: 10px; }
   [hidden] { display: none !important; }
   a { color: var(--accent); }
+  .chat p { margin: 5px 0; } .chat .who { font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-right: 6px; }
+  .chat .CALLER .who { color: var(--accent); }
+  table.fields th { width: 190px; text-transform: none; letter-spacing: 0; font-size: 13px; }
+  .task { border-left: 3px solid var(--accent); padding: 4px 10px; margin: 8px 0; background: var(--bg); border-radius: 0 8px 8px 0; }
 </style>
 </head>
 <body>
@@ -57,12 +61,14 @@
 <main id="app" hidden>
   <header>
     <h1>Aangan <span>Call Desk</span></h1>
-    <div>
+    <div id="controls">
       <label for="days" class="small">Period</label>
       <select id="days"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option></select>
       <button id="refresh">Refresh</button>
     </div>
   </header>
+  <div id="detail" hidden></div>
+  <div id="dash">
   <div id="rateWarn" class="card warn" hidden>Cost rates aren't set (VAANI_INR_PER_MIN), so the cost figures show ₹0.</div>
   <div id="crmFail" class="card warn" hidden><span id="crmFailText"></span> <button id="retry">Retry failed syncs</button> <span id="retryMsg" class="small"></span></div>
   <div id="unmatched" class="card warn" hidden></div>
@@ -78,6 +84,7 @@
   <section class="card"><h2>Recent calls</h2><div class="tablewrap"><table>
     <thead><tr><th>When (IST)</th><th>Caller</th><th>Area</th><th>Status</th><th>Why / notes</th><th>Consultation</th><th>CRM</th><th>Mins</th><th>Cost</th></tr></thead>
     <tbody id="rows"></tbody></table></div></section>
+  </div>
 </main>
 
 <script>
@@ -95,9 +102,56 @@ function list(el, obj) {
   el.innerHTML = items.length ? items.map(([k, n]) => `<li><span>${esc(human(k))}</span><b>${n}</b></li>`).join('') : '<li class="empty">None</li>';
 }
 
+const leadId = new URLSearchParams(location.search).get('lead');
+const when = iso => iso ? new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }) : '—';
+
+function renderLead(d) {
+  $('login').hidden = true; $('app').hidden = false; $('dash').hidden = true; $('controls').hidden = true; $('detail').hidden = false;
+  const l = d.lead ?? {};
+  const row = (k, v) => (v == null || v === '' || (Array.isArray(v) && !v.length) ? '' : `<tr><th>${k}</th><td>${esc(Array.isArray(v) ? v.join(', ') : v)}</td></tr>`);
+  const links = [d.hubspot_url && ['Open in HubSpot', d.hubspot_url], d.calendly_booking_url && ['Calendly booking link', d.calendly_booking_url], d.recording_url && ['Recording', d.recording_url]]
+    .filter(Boolean).map(([t, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`).join(' · ');
+  $('detail').innerHTML = `
+    <p><a href="/">← All calls</a></p>
+    <section class="card">
+      <h2>${esc(l.name ?? 'Name not given')} · ${esc(d.phone ?? 'no caller ID')} <span class="pill ${d.status}">${esc(d.status.replace('_', ' '))}</span></h2>
+      <div class="small">${esc(when(d.call_started_at))} IST · ${Math.round((d.duration_sec ?? 0) / 6) / 10} min · cost ${inr(d.cost_inr ?? 0)}</div>
+      ${d.next_task ? `<div class="task"><b>Next task:</b> ${esc(d.next_task)}</div>` : ''}
+      ${l.call_summary ? `<p>${esc(l.call_summary)}</p>` : ''}
+      ${(d.reasons?.length || d.notes?.length) ? `<p class="small">Why: ${esc([...(d.reasons ?? []), ...(d.notes ?? [])].map(human).join('; '))}</p>` : ''}
+      ${d.flags?.length ? `<p style="color:var(--bad)">⚠ Agent check: ${esc(d.flags.map(human).join(', '))}</p>` : ''}
+      ${d.hubspot_error ? `<p style="color:var(--bad)">CRM sync problem: ${esc(d.hubspot_error)}</p>` : ''}
+      <p>${links}</p>
+    </section>
+    <div class="two" style="margin-top:12px">
+      <section class="card"><h2>What the AI captured</h2><table class="fields">
+        ${row('Segment', l.segment)}${row('Property', (l.property_type ?? '').replace('_', ' '))}${row('Project', (l.scope ?? '').replace('_', ' '))}
+        ${row('Service', (l.project_kind ?? '').replace(/_/g, ' '))}${row('Area', [l.locality, l.city].filter(Boolean).join(', '))}
+        ${row('Carpet area', l.carpet_sqft && l.carpet_sqft + ' sq ft')}${row('Rooms', l.rooms_in_scope)}${row('Complete by', l.deadline_date)}
+        ${row('Site available', l.site_available_date)}${row('Decision-maker', l.decision_maker)}${row('Preferred time', l.preferred_slot)}
+        ${row('Budget (volunteered)', l.budget_max && `${inr(l.budget_min ?? l.budget_max)} – ${inr(l.budget_max)}`)}${row('Referral', l.referral)}
+        ${row('Email', l.email)}${row('Notes', l.caller_notes)}
+        ${row('Consultation', d.consultation_status && human(d.consultation_status))}${row('Consultation time', d.consultation_start && when(d.consultation_start))}
+      </table></section>
+      <section class="card"><h2>Timeline</h2><ul class="reasons">
+        ${(d.events ?? []).map(e => `<li><span>${esc(when(e.created_at))} · ${esc(e.source)} · ${esc(String(e.type).replace(/_/g, ' '))}</span></li>`).join('') || '<li class="empty">No events</li>'}
+      </ul></section>
+    </div>
+    <section class="card chat" style="margin-top:12px"><h2>Transcript</h2>
+      ${(d.transcript ?? []).map(t => `<p class="${esc(t.role)}"><span class="who">${t.role === 'AGENT' ? 'Agent' : 'Caller'}</span>${esc(t.text)}</p>`).join('') || '<p class="empty">The caller said nothing before the call dropped.</p>'}
+    </section>`;
+}
+
 async function load() {
   let pass = store.get('pass');
   if (!pass) return showLogin();
+  if (leadId) {
+    const r = await fetch(`/api/lead?id=${encodeURIComponent(leadId)}`, { headers: { 'x-passcode': pass } });
+    if (r.status === 401) { store.set('pass', ''); return showLogin('Wrong passcode.'); }
+    if (!r.ok) { $('app').hidden = false; $('login').hidden = true; $('dash').hidden = true; $('controls').hidden = true; $('detail').hidden = false;
+      $('detail').innerHTML = `<p><a href="/">← All calls</a></p><div class="card">Lead not found (${r.status}).</div>`; return; }
+    return renderLead(await r.json());
+  }
   const res = await fetch(`/api/stats?days=${$('days').value}`, { headers: { 'x-passcode': pass } });
   if (res.status === 401) { store.set('pass', ''); return showLogin('Wrong passcode.'); }
   if (!res.ok) { $('kpis').innerHTML = `<div class="card">Could not load data (${res.status}).</div>`; return; }
@@ -139,7 +193,7 @@ function render(d) {
 
   $('rows').innerHTML = d.recent.length ? d.recent.map(r => `<tr>
     <td>${esc(new Date(r.at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }))}</td>
-    <td>${esc(r.name ?? '—')}<div class="small">${esc(r.phone ?? 'no caller ID')}</div></td>
+    <td><a href="?lead=${encodeURIComponent(r.id)}">${esc(r.name ?? 'Open')}</a><div class="small">${esc(r.phone ?? 'no caller ID')}</div></td>
     <td>${esc(r.locality ?? '—')}</td>
     <td><span class="pill ${r.status}">${esc(r.status.replace('_', ' '))}</span></td>
     <td>${esc([...(r.reasons ?? []), ...(r.notes ?? [])].map(human).join(', ') || '—')}${r.flags?.length ? `<div class="small" style="color:var(--bad)">⚠ ${esc(r.flags.map(human).join(', '))}</div>` : ''}</td>

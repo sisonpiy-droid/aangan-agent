@@ -3,7 +3,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 
-const OURS = ['VAANI_WEBHOOK_SECRET', 'CALENDLY_WEBHOOK_SIGNING_KEY', 'DASHBOARD_PASSCODE', 'CHECK_LEAD_SECRET'];
+const OURS = ['VAANI_WEBHOOK_SECRET', 'CALENDLY_WEBHOOK_SIGNING_KEY', 'DASHBOARD_PASSCODE', 'CHECK_LEAD_SECRET', 'CRON_SECRET'];
 const file = new URL('../.env', import.meta.url);
 let env = existsSync(file) ? readFileSync(file, 'utf8') : readFileSync(new URL('../.env.example', import.meta.url), 'utf8');
 for (const name of OURS) {

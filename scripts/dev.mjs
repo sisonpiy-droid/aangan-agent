@@ -9,6 +9,8 @@ import { normalize } from '../lib/extract.js';
 process.env.DASHBOARD_PASSCODE ||= 'demo';
 const routes = {
   '/api/stats': await import('../api/stats.js'),
+  '/api/lead': await import('../api/lead.js'),
+  '/api/weekly-digest': await import('../api/weekly-digest.js'),
   '/api/check-lead': await import('../api/check-lead.js'),
   '/api/call-ended': await import('../api/call-ended.js'),
   '/api/retry-sync': await import('../api/retry-sync.js'),

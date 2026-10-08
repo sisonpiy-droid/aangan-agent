@@ -24,12 +24,14 @@ const as = id => ({ extractFn: async () => ({ lead: normalize(fixtures[id]), tok
 // Stubbed network: records every Telegram / HubSpot request; HubSpot can be made to fail.
 let net = [], hubspotDown = false, msg = 0;
 globalThis.fetch = async (url, init) => {
-  const u = String(url), body = init.body ? JSON.parse(init.body) : null;
+  const u = String(url), body = typeof init.body === 'string' ? JSON.parse(init.body) : null;
+  if (u.startsWith('https://api.telegram.org') && init.body instanceof FormData) { net.push({ to: 'telegram-doc' }); return Response.json({ ok: true, result: { message_id: ++msg } }); }
   if (u.startsWith('https://api.telegram.org')) { net.push({ to: 'telegram', chat: body.chat_id, text: body.text }); return Response.json({ ok: true, result: { message_id: ++msg } }); }
   if (u.startsWith('https://api.hubapi.com')) {
     net.push({ to: 'hubspot', path: u.slice(22), body });
     if (hubspotDown) return new Response('HubSpot is down', { status: 503 });
     if (init.method === 'PUT') return new Response(null, { status: 204 });
+    if (/\/objects\/(notes|calls|tasks)$/.test(u)) return Response.json({ id: 'act-1' });
     return Response.json({ results: [{ id: u.includes('contacts') ? 'c-1' : 'd-1' }] });
   }
   throw new Error(`unexpected fetch ${u}`);

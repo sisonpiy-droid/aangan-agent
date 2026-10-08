@@ -23,11 +23,14 @@ console.log('  → CALENDLY_EVENT_URL_RESIDENTIAL=<url>   and optionally CALENDL
 
 if (!BASE || !SIGNING_KEY) { console.log('Set PUBLIC_BASE_URL and CALENDLY_WEBHOOK_SIGNING_KEY, then re-run to create the webhook (optional: booking links work without it).'); process.exit(0); }
 const url = `${BASE.replace(/\/$/, '')}/api/calendly-webhook`;
-const subs = await cal(`/webhook_subscriptions?organization=${encodeURIComponent(org)}&user=${encodeURIComponent(user)}&scope=user`);
+// Round-robin team event types are hosted by whichever designer is next, so their bookings only reach an
+// organization-wide webhook. Set CALENDLY_WEBHOOK_SCOPE=organization for that (needs a Teams plan).
+const scope = process.env.CALENDLY_WEBHOOK_SCOPE === 'organization' ? 'organization' : 'user';
+const subs = await cal(`/webhook_subscriptions?organization=${encodeURIComponent(org)}&scope=${scope}${scope === 'user' ? `&user=${encodeURIComponent(user)}` : ''}`);
 if ((subs.data?.collection ?? []).some(s => s.callback_url === url && s.state === 'active')) {
   console.log(`Webhook already active: ${url}\nSet CALENDLY_WEBHOOKS_ENABLED=true (automatic booking tracking).`);
 } else {
-  const r = await cal('/webhook_subscriptions', 'POST', { url, events: ['invitee.created', 'invitee.canceled'], organization: org, user, scope: 'user', signing_key: SIGNING_KEY });
+  const r = await cal('/webhook_subscriptions', 'POST', { url, events: ['invitee.created', 'invitee.canceled'], organization: org, ...(scope === 'user' ? { user } : {}), scope, signing_key: SIGNING_KEY });
   if (r.status === 201) console.log(`Webhook created: ${url}\nSet CALENDLY_WEBHOOKS_ENABLED=true (automatic booking tracking).`);
   else console.log(`Could not create the webhook (${r.status}: ${r.data?.message ?? JSON.stringify(r.data)}).
 Calendly webhooks need a paid plan (Standard or above). Nothing breaks: leave CALENDLY_WEBHOOKS_ENABLED=false.

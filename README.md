@@ -107,6 +107,25 @@ Platform: **Vaani Voice** (app.vaanivoice.ai, docs at docs.vaanivoice.ai/guides/
   that already has a value; status, reasons, stage and consultation fields are always overwritten.
 - Failures: `hubspot_error` on the lead + an `events` row → dashboard banner → **Retry failed syncs**.
 - Telegram is sent after the sync so it can link the record; if the sync fails, Telegram still goes out, marked.
+- **Activity on the record** (`activityPlan` / `syncActivity`), created once each (the `events` table remembers what exists, so
+  retries and Calendly updates never duplicate): a **Note** (Vaani's summary, why, next task, lead-page link), a **Call**
+  (inbound, with the full transcript and the recording link in its body; `hs_call_recording_url` only takes direct audio files,
+  so it isn't used) and a **Task**, all associated with the deal and contact (association IDs 214/202, 206/194, 216/204).
+  An activity failure (for example a missing HubSpot scope) shows as `hubspot_error: activity: …` on the dashboard and is
+  retried by **Retry failed syncs**.
+- **Tasks** (`lib/tasks.js`, the same logic as the Telegram "Next task" line):
+
+| Lead | Task | Due |
+|---|---|---|
+| `QUALIFIED` | Send consultation link (or "Book a consultation" if Calendly isn't set up) | 1 hour |
+| `ESCALATE` | Call back existing client (on the contact; no deal) | 15 minutes |
+| Failed/dropped call with caller ID | Call back caller | 15 minutes |
+| `NEEDS_REVIEW` | Review AI lead (this is how review leads get seen, since they're not on Telegram) | 4 hours |
+| `DECLINED` for a "not now" reason (`TIMELINE_TOO_SHORT`, `NOT_A_FULL_PROJECT`) | Re-contact | 5 weeks |
+| Other `DECLINED` (area, budget, business type) | none | — |
+
+- Board, saved views and a dashboard: the API can't create them, so [docs/HUBSPOT-DASHBOARD.md](docs/HUBSPOT-DASHBOARD.md)
+  has the click-by-click steps.
 
 HubSpot properties (group "AI Front Desk", created by `npm run hubspot:setup`):
 
@@ -133,10 +152,24 @@ Each `QUALIFIED` lead (and each `NEEDS_REVIEW` lead, for a human to send later) 
 type (a commercial one if configured) with `utm_source=aangan_ai_front_desk`, `utm_content=<lead id>` and the
 name/email prefilled. `consultation_status = link_ready`.
 
-**Delivery to the caller:** Vaani can't text, so the designer's Telegram note has a **one-tap "Send booking link on
-WhatsApp"** button (`wa.me` with the message prefilled, sent from the designer's own phone). The link is also on the
-HubSpot deal. On the call the agent says exactly: *"A designer will send you a link where you can choose a convenient
+**Delivery to the caller.** Vaani's API has no way to send a text, so these are the options:
+
+| Option | Status |
+|---|---|
+| **One-tap WhatsApp** from the designer's Telegram note (`wa.me` with the message prefilled, sent from the designer's own phone) | ✅ built, works today |
+| **One-tap email** (`mailto:` with the link prefilled) when the caller gave an address; the agent offers it once before closing | ✅ built, still one tap by a designer |
+| Link also on the HubSpot deal and in the task | ✅ built |
+| **Fully automatic WhatsApp via Vaani's WhatsApp integration** (Settings → Integrations → WhatsApp) | ⏳ not built: Vaani documents it for inbound WhatsApp conversations, with no outbound message API. Check whether your account can send a message after a call. |
+| **Fully automatic email via HubSpot** | ❌ not possible here: sending email from HubSpot's API needs the paid Marketing Hub transactional add-on or a Sales Hub workflow/sequence |
+| Fully automatic WhatsApp through Meta's WhatsApp Cloud API directly | possible later, as a sixth system (needs a verified business and approved message template) |
+
+On the call the agent says exactly: *"A designer will send you a link where you can choose a convenient
 consultation time."* It never names or promises a time; only Calendly's own page shows availability.
+
+**Round-robin across designers** (needs a Calendly **Teams** plan; no code change): in Calendly create a **Team** →
+**Round robin** event type with the designers as hosts, copy its link into `CALENDLY_EVENT_URL_RESIDENTIAL`, and set
+`CALENDLY_WEBHOOK_SCOPE=organization` before running `npm run calendly:setup` for automatic tracking, because team
+bookings only reach an organization-wide webhook.
 
 Booking tracking depends on whether your Calendly account has webhook access (paid plans):
 
@@ -161,29 +194,38 @@ When webhooks are on (`POST /api/calendly-webhook`, events `invitee.created` + `
 
 | Trigger | To | Contains |
 |---|---|---|
-| `QUALIFIED` | designers group | full brief, caller's preferred time, WhatsApp booking-link button, HubSpot link |
-| `ESCALATE` | Nikhil | client, complaint, "senior call back" |
-| Failed or dropped call **with caller ID** | designers group | 📞 CALL BACK + tap-to-call number |
+| `QUALIFIED` | designers group | **Next task**, Vaani's summary, full brief, WhatsApp/email booking-link buttons, HubSpot + lead-page links, and the **full transcript as an attached `.txt`** (a reply to the note) |
+| `ESCALATE` | Nikhil | the same: next task (call back within 15 min), summary, transcript file |
+| Failed or dropped call **with caller ID** | designers group | 📞 CALL BACK + tap-to-call number, next task |
 | Failed call **without** caller ID | none | (dashboard + HubSpot "Needs review") |
 | Consultation booked / rescheduled / canceled (webhooks on) | designers group | caller, time (IST) or reason, HubSpot link |
 | Calendly booking that matches no call (webhooks on) | designers group | invitee details, "link by hand" |
 | `NEEDS_REVIEW`, `DECLINED` | none | (HubSpot + dashboard) |
 
-Every message sent is recorded in `events` (`source = telegram`, `external_id = chat:message_id`).
+Every message sent is recorded in `events` (`source = telegram`, `external_id = chat:message_id`). If Telegram
+rejects the formatting of a note, it is resent as plain text with the links written out, so a handoff is never lost.
+
+**Weekly digest to Nikhil** (`api/weekly-digest.js`, Vercel Cron `30 3 * * 1` = Monday 09:00 IST, authenticated by
+`CRON_SECRET`): calls answered (and the change on last week), after-hours share, qualified / review / declined /
+escalated, consultation numbers, top decline reasons, median handoff time, **what the tool cost** (total, per call,
+per qualified lead), qualified pipeline value, and any price/slot flags or failed syncs. These are the numbers he used to pull by hand.
+
+**Lead page** (`/?lead=<id>`, same passcode as the dashboard, linked from every Telegram note and HubSpot Note): Vaani's
+summary, the next task, everything the AI captured, the full transcript, the links, and the audit timeline.
 
 ### Supabase
 - `leads`: one row per enquiry: transcript, extracted lead, status/reasons/notes/flags, cost and tokens,
   `notified_at`, HubSpot IDs/URL/sync state, Calendly link/status/start/end/event/invitee/cancel reason.
-- `events`: append-only raw Vaani and Calendly payloads, rules decisions, HubSpot failures, Telegram messages,
-  unmatched bookings. `unique (source, type, external_id)` makes webhook retries harmless.
+- `events`: append-only raw Vaani and Calendly payloads, rules decisions, HubSpot failures and the Notes/Calls/Tasks
+  created, Telegram messages, unmatched bookings. `unique (source, type, external_id)` makes webhook retries harmless.
 - RLS on with no policies: only the server's service-role key can read or write.
 
 ## Environment variables
 
 See `.env.example`. **Secrets** (never in the repo or in chat): `VAANI_WEBHOOK_SECRET`, `GEMINI_API_KEY`,
 `SUPABASE_SERVICE_ROLE_KEY`, `HUBSPOT_SERVICE_KEY`, `CALENDLY_TOKEN`, `CALENDLY_WEBHOOK_SIGNING_KEY`,
-`TELEGRAM_BOT_TOKEN`, `DASHBOARD_PASSCODE`, `CHECK_LEAD_SECRET`. `npm run secrets` generates `VAANI_WEBHOOK_SECRET`,
-`CALENDLY_WEBHOOK_SIGNING_KEY`, `DASHBOARD_PASSCODE` and `CHECK_LEAD_SECRET`.
+`TELEGRAM_BOT_TOKEN`, `DASHBOARD_PASSCODE`, `CHECK_LEAD_SECRET`, `CRON_SECRET`. `npm run secrets` generates `VAANI_WEBHOOK_SECRET`,
+`CALENDLY_WEBHOOK_SIGNING_KEY`, `DASHBOARD_PASSCODE`, `CHECK_LEAD_SECRET` and `CRON_SECRET`.
 **Not secret:** URLs, IDs, chat IDs, rates.
 
 ## Setup
