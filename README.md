@@ -21,7 +21,7 @@ Caller ──► Vaani Voice (voice agent, en/hi) │
                                                          8. Telegram handoff (with HubSpot + booking links)
 Caller ──► Calendly page (real availability) ──► invitee.created / invitee.canceled (signed)
             └──► /api/calendly-webhook ─► match lead ─► Supabase ─► HubSpot (stage, times) ─► Telegram confirmation
-Nikhil ──► dashboard (/api/stats, passcode) ─► "Retry failed syncs" ─► /api/retry-sync
+Nikhil ──► dashboard (/api/stats, open, phones masked) ─► "Retry failed syncs" ─► /api/retry-sync
 ```
 
 | Component | Owns | Never does |
@@ -207,7 +207,7 @@ rejects the formatting of a note, it is resent as plain text with the links writ
 escalated, consultation numbers, top decline reasons, median handoff time, **what the tool cost** (total, per call,
 per qualified lead), qualified pipeline value, and any price/slot flags or failed syncs. These are the numbers he used to pull by hand.
 
-**Lead page** (`/?lead=<id>`, same passcode as the dashboard, linked from every Telegram note and HubSpot Note): Vaani's
+**Lead page** (`/?lead=<id>`, passcode-protected: it holds transcripts and full numbers, linked from every Telegram note and HubSpot Note): Vaani's
 summary, the next task, everything the AI captured, the full transcript, the links, and the audit timeline.
 
 ### Supabase

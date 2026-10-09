@@ -207,17 +207,16 @@ function renderLead(d) {
 }
 
 async function load() {
-  let pass = store.get('pass');
-  if (!pass) return showLogin();
+  const pass = store.get('pass');
   if (leadId) {
+    if (!pass) return showLogin('Lead pages hold transcripts and phone numbers, so they need the passcode.');
     const r = await fetch(`/api/lead?id=${encodeURIComponent(leadId)}`, { headers: { 'x-passcode': pass } });
     if (r.status === 401) { store.set('pass', ''); return showLogin('Wrong passcode.'); }
     if (!r.ok) { $('app').hidden = false; $('login').hidden = true; $('dash').hidden = true; $('controls').hidden = true; $('detail').hidden = false;
       $('detail').innerHTML = `<p><a href="/">← All calls</a></p><div class="card">Lead not found (${r.status}).</div>`; return; }
     return renderLead(await r.json());
   }
-  const res = await fetch(`/api/stats?days=${$('days').value}`, { headers: { 'x-passcode': pass } });
-  if (res.status === 401) { store.set('pass', ''); return showLogin('Wrong passcode.'); }
+  const res = await fetch(`/api/stats?days=${$('days').value}`);
   if (!res.ok) { $('kpis').innerHTML = `<div class="card">Could not load data (${res.status}).</div>`; return; }
   render(await res.json());
 }
@@ -328,8 +327,11 @@ function showLogin(msg = '') { $('app').hidden = true; $('login').hidden = false
 $('login').addEventListener('submit', e => { e.preventDefault(); store.set('pass', $('pass').value); load(); });
 $('refresh').addEventListener('click', load);
 $('retry').addEventListener('click', async () => {
+  const pass = store.get('pass') || prompt('Passcode to retry the failed syncs:');
+  if (!pass) return;
   $('retry').disabled = true; $('retryMsg').textContent = 'Retrying…';
-  const res = await fetch('/api/retry-sync', { method: 'POST', headers: { 'x-passcode': store.get('pass') ?? '' } });
+  const res = await fetch('/api/retry-sync', { method: 'POST', headers: { 'x-passcode': pass } });
+  if (res.status === 401) store.set('pass', '');
   const r = res.ok ? await res.json() : null;
   $('retryMsg').textContent = r ? `Fixed ${r.fixed} of ${r.retried}.` : `Retry failed (${res.status}).`;
   $('retry').disabled = false; load();
