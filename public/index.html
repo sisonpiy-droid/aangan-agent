@@ -243,7 +243,7 @@ async function load() {
 }
 
 // Put the explainer in public/ (e.g. /explainer.mp4) or paste a YouTube/Loom/Drive embed link here.
-const VIDEO_URL = '';
+const VIDEO_URL = '/explainer.mp4';
 let LAST = null;
 const STATUS_LABEL = { QUALIFIED: 'Qualified', NEEDS_REVIEW: 'Needs review', DECLINED: 'Declined', ESCALATE: 'Escalated' };
 const fmt = iso => new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
@@ -322,7 +322,7 @@ function showTab(t) {
   if (t === 'video' && !$('videoBox').dataset.ready) {
     $('videoBox').dataset.ready = '1';
     $('videoBox').innerHTML = !VIDEO_URL ? '<div><b>Explainer video coming soon</b><div class="small" style="color:#cdbda8">A short walkthrough of how every call becomes a handed-off lead.</div></div>'
-      : /\.(mp4|webm)(\?|$)/i.test(VIDEO_URL) ? `<video controls preload="metadata" src="${esc(VIDEO_URL)}"></video>`
+      : /\.(mp4|webm)(\?|$)/i.test(VIDEO_URL) ? `<video controls playsinline autoplay preload="auto" poster="/explainer.jpg" src="${esc(VIDEO_URL)}"></video>`
       : `<iframe src="${esc(VIDEO_URL)}" allow="fullscreen; picture-in-picture" allowfullscreen></iframe>`;
   }
 }
