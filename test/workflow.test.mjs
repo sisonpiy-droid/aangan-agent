@@ -9,7 +9,7 @@ Object.assign(process.env, {
   HUBSPOT_SERVICE_KEY: 'k', HUBSPOT_PORTAL_ID: '123', HUBSPOT_PIPELINE_ID: 'p1',
   HUBSPOT_STAGE_QUALIFIED: 's-q', HUBSPOT_STAGE_REVIEW: 's-r', HUBSPOT_STAGE_BOOKED: 's-b', HUBSPOT_STAGE_DECLINED: 's-d',
   CALENDLY_EVENT_URL_RESIDENTIAL: 'https://calendly.com/aangan/consultation', CALENDLY_WEBHOOKS_ENABLED: 'false',
-  PUBLIC_BASE_URL: 'https://aangan.example', DASHBOARD_PASSCODE: 'pw', CRON_SECRET: 'cron-secret', VAANI_INR_PER_MIN: '5.58',
+  PUBLIC_BASE_URL: 'https://aangan.example', CRON_SECRET: 'cron-secret', VAANI_INR_PER_MIN: '5.58',
 });
 
 const { processCall, syncAndNotify } = await import('../lib/pipeline.js');
@@ -195,13 +195,12 @@ test('a link Telegram cannot parse → the handoff is resent as plain text, neve
   assert.ok(note.text.includes('Booking link: https://calendly.com'), 'the booking link survives the plain-text resend');
 });
 
-test('lead page API: passcode, transcript, next task and timeline', async () => {
+test('lead page API: open, with transcript, next task and timeline', async () => {
   const row = await processCall(call('T01', { fromNumber: '+919000000206', summary: SUMMARY }), as('T01'));
-  const req = (id, pw) => new Request(`http://x/api/lead?id=${id}`, { headers: pw ? { 'x-passcode': pw } : {} });
-  assert.equal((await leadPage(req(row.id))).status, 401);
-  assert.equal((await leadPage(req('abc', 'pw'))).status, 400);
-  assert.equal((await leadPage(req(999999, 'pw'))).status, 404);
-  const d = await (await leadPage(req(row.id, 'pw'))).json();
+  const req = (id) => new Request(`http://x/api/lead?id=${id}`);
+  assert.equal((await leadPage(req('abc'))).status, 400);
+  assert.equal((await leadPage(req(999999))).status, 404);
+  const d = await (await leadPage(req(row.id))).json();
   assert.equal(d.transcript.length, calls.T01.transcript.length);
   assert.equal(d.next_task, 'Send the Calendly link and confirm a visit within 1 hour');
   assert.equal(d.lead.call_summary, SUMMARY);

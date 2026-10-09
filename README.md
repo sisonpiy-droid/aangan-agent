@@ -21,7 +21,7 @@ Caller ──► Vaani Voice (voice agent, en/hi) │
                                                          8. Telegram handoff (with HubSpot + booking links)
 Caller ──► Calendly page (real availability) ──► invitee.created / invitee.canceled (signed)
             └──► /api/calendly-webhook ─► match lead ─► Supabase ─► HubSpot (stage, times) ─► Telegram confirmation
-Nikhil ──► dashboard (/api/stats, open, phones masked) ─► "Retry failed syncs" ─► /api/retry-sync
+Nikhil ──► dashboard (/api/stats, open) ─► "Retry failed syncs" ─► /api/retry-sync
 ```
 
 | Component | Owns | Never does |
@@ -207,7 +207,7 @@ rejects the formatting of a note, it is resent as plain text with the links writ
 escalated, consultation numbers, top decline reasons, median handoff time, **what the tool cost** (total, per call,
 per qualified lead), qualified pipeline value, and any price/slot flags or failed syncs. These are the numbers he used to pull by hand.
 
-**Lead page** (`/?lead=<id>`, passcode-protected: it holds transcripts and full numbers, linked from every Telegram note and HubSpot Note): Vaani's
+**Lead page** (`/?lead=<id>`, open link, no passcode: it holds transcripts and full numbers, linked from every Telegram note and HubSpot Note): Vaani's
 summary, the next task, everything the AI captured, the full transcript, the links, and the audit timeline.
 
 ### Supabase
@@ -221,8 +221,8 @@ summary, the next task, everything the AI captured, the full transcript, the lin
 
 See `.env.example`. **Secrets** (never in the repo or in chat): `VAANI_WEBHOOK_SECRET`, `GEMINI_API_KEY`,
 `SUPABASE_SERVICE_ROLE_KEY`, `HUBSPOT_SERVICE_KEY`, `CALENDLY_TOKEN`, `CALENDLY_WEBHOOK_SIGNING_KEY`,
-`TELEGRAM_BOT_TOKEN`, `DASHBOARD_PASSCODE`, `CHECK_LEAD_SECRET`, `CRON_SECRET`. `npm run secrets` generates `VAANI_WEBHOOK_SECRET`,
-`CALENDLY_WEBHOOK_SIGNING_KEY`, `DASHBOARD_PASSCODE`, `CHECK_LEAD_SECRET` and `CRON_SECRET`.
+`TELEGRAM_BOT_TOKEN`, `CHECK_LEAD_SECRET`, `CRON_SECRET`. `npm run secrets` generates `VAANI_WEBHOOK_SECRET`,
+`CALENDLY_WEBHOOK_SIGNING_KEY`, `CHECK_LEAD_SECRET` and `CRON_SECRET`.
 **Not secret:** URLs, IDs, chat IDs, rates.
 
 ## Setup
@@ -250,7 +250,7 @@ See `.env.example`. **Secrets** (never in the repo or in chat): `VAANI_WEBHOOK_S
 npm test                            rules, HubSpot sync, Calendly flow, guardrails — no network
 npm run simulate -- T01 T17a T17b   real pipeline on the case transcripts (offline fixtures if no GEMINI_API_KEY)
 npm run test:live                   Gemini extraction on the real transcripts vs hand-written leads (costs a little)
-npm run dev                         dashboard + API on http://localhost:3400 (memory store, demo data, passcode "demo")
+npm run dev                         dashboard + API on http://localhost:3400 (memory store, demo data)
 ```
 
 ## Extending to a web form (not built)

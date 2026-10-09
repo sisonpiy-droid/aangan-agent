@@ -1,4 +1,4 @@
-// Dashboard data. Open on purpose (no passcode): phones are masked, and transcripts, full numbers and emails stay behind /api/lead.
+// Dashboard data. Open (no passcode); phone numbers are masked here.
 import { leadsSince, countEvents } from '../lib/store.js';
 import { summarise } from '../lib/summary.js';
 

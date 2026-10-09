@@ -53,8 +53,6 @@
   .warn { border-color: var(--warn); color: var(--warn); background: #fdf7e9; margin-bottom: 12px; }
   details.more { margin-bottom: 22px; } details.more summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-bottom: 10px; }
   .small { color: var(--muted); font-size: 12.5px; }
-  #login { max-width: 340px; margin: 15vh auto; display: grid; gap: 12px; }
-  #login h1 { font-size: 22px; }
   [hidden] { display: none !important; }
   a { color: var(--accent); }
   table.fields { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -119,13 +117,6 @@
 
 </head>
 <body>
-<form id="login" class="card" hidden>
-  <div class="brand"><div class="mark">A</div><h1>Aangan Call Desk</h1></div>
-  <label for="pass" class="small">Dashboard passcode</label>
-  <input id="pass" type="password" autocomplete="current-password" required>
-  <button>Open</button>
-  <div id="loginErr" class="small" style="color:var(--bad)"></div>
-</form>
 
 <main id="app" hidden>
   <header>
@@ -198,7 +189,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>
 const $ = id => document.getElementById(id);
-const store = { get: k => { try { return sessionStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { sessionStorage.setItem(k, v); } catch {} } };
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const human = c => c.replace(/^UNANSWERED_/, 'not answered: ').replace(/_/g, ' ').toLowerCase();
 const lakh = v => '₹' + (v / 1e5).toLocaleString('en-IN', { maximumFractionDigits: 1 }) + 'L';
@@ -215,7 +205,7 @@ const leadId = new URLSearchParams(location.search).get('lead');
 const when = iso => iso ? new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
 function renderLead(d) {
-  $('login').hidden = true; $('app').hidden = false; $('dash').hidden = true; $('controls').hidden = true; $('detail').hidden = false;
+  $('app').hidden = false; $('dash').hidden = true; $('controls').hidden = true; $('detail').hidden = false;
   const l = d.lead ?? {};
   const row = (k, v) => (v == null || v === '' || (Array.isArray(v) && !v.length) ? '' : `<tr><th>${k}</th><td>${esc(Array.isArray(v) ? v.join(', ') : v)}</td></tr>`);
   const links = [d.hubspot_url && ['Open in HubSpot', d.hubspot_url], d.calendly_booking_url && ['Calendly booking link', d.calendly_booking_url], d.recording_url && ['Recording', d.recording_url]]
@@ -252,12 +242,9 @@ function renderLead(d) {
 }
 
 async function load() {
-  const pass = store.get('pass');
   if (leadId) {
-    if (!pass) return showLogin('Lead pages hold transcripts and phone numbers, so they need the passcode.');
-    const r = await fetch(`/api/lead?id=${encodeURIComponent(leadId)}`, { headers: { 'x-passcode': pass } });
-    if (r.status === 401) { store.set('pass', ''); return showLogin('Wrong passcode.'); }
-    if (!r.ok) { $('app').hidden = false; $('login').hidden = true; $('dash').hidden = true; $('controls').hidden = true; $('detail').hidden = false;
+    const r = await fetch(`/api/lead?id=${encodeURIComponent(leadId)}`);
+    if (!r.ok) { $('app').hidden = false; $('dash').hidden = true; $('controls').hidden = true; $('detail').hidden = false;
       $('detail').innerHTML = `<p><a href="/">← All calls</a></p><div class="card">Lead not found (${r.status}).</div>`; return; }
     return renderLead(await r.json());
   }
@@ -334,15 +321,11 @@ function renderBoard() {
 
 async function openTranscript(id) {
   const dlg = $('trDlg'), body = $('trBody');
-  let pass = store.get('pass') || prompt('Transcripts are private. Passcode:');
-  if (!pass) return;
   $('trTitle').textContent = 'Transcript'; $('trSub').textContent = ''; body.innerHTML = '<p class="small">Loading…</p>';
   dlg.showModal();
   try {
-    const r = await fetch('/api/lead?id=' + encodeURIComponent(id), { headers: { 'x-passcode': pass } });
-    if (r.status === 401) { store.set('pass', ''); body.innerHTML = '<p class="small">Wrong passcode. Close this and try again.</p>'; return; }
+    const r = await fetch('/api/lead?id=' + encodeURIComponent(id));
     if (!r.ok) { body.innerHTML = '<p class="small">Could not load it (' + r.status + ').</p>'; return; }
-    store.set('pass', pass);
     const d = await r.json(), l = d.lead ?? {};
     $('trTitle').textContent = (l.name ?? 'Transcript') + (l.enquiry_ref ? ' · ' + l.enquiry_ref : '');
     $('trSub').textContent = [CH[l.channel] ?? 'Call', fmt(d.call_started_at)].join(' · ');
@@ -396,7 +379,7 @@ document.querySelector('.tabs').addEventListener('click', e => { const b = e.tar
 
 function render(d) {
   LAST = d;
-  $('login').hidden = true; $('app').hidden = false;
+  $('app').hidden = false;
   $('rateWarn').hidden = d.cost.ratesSet;
   $('crmFail').hidden = !d.crm.failed;
   $('unmatched').hidden = !d.consultations.unmatched;
@@ -444,15 +427,10 @@ function render(d) {
   if (!Object.keys(d.flags).length) $('flags').innerHTML = '<li class="empty">No prices quoted and no slots promised by the agent.</li>';
 }
 
-function showLogin(msg = '') { $('app').hidden = true; $('login').hidden = false; $('loginErr').textContent = msg; $('pass').focus(); }
-$('login').addEventListener('submit', e => { e.preventDefault(); store.set('pass', $('pass').value); load(); });
 $('refresh').addEventListener('click', load);
 $('retry').addEventListener('click', async () => {
-  const pass = store.get('pass') || prompt('Passcode to retry the failed syncs:');
-  if (!pass) return;
   $('retry').disabled = true; $('retryMsg').textContent = 'Retrying…';
-  const res = await fetch('/api/retry-sync', { method: 'POST', headers: { 'x-passcode': pass } });
-  if (res.status === 401) store.set('pass', '');
+  const res = await fetch('/api/retry-sync', { method: 'POST' });
   const r = res.ok ? await res.json() : null;
   $('retryMsg').textContent = r ? `Fixed ${r.fixed} of ${r.retried}.` : `Retry failed (${res.status}).`;
   $('retry').disabled = false; load();

@@ -6,7 +6,6 @@ import { usingMemory } from '../lib/store.js';
 import { processCall, applyBooking } from '../lib/pipeline.js';
 import { normalize } from '../lib/extract.js';
 
-process.env.DASHBOARD_PASSCODE ||= 'demo';
 const routes = {
   '/api/stats': await import('../api/stats.js'),
   '/api/lead': await import('../api/lead.js'),
@@ -49,4 +48,4 @@ createServer(async (req, res) => {
     return;
   }
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(readFileSync(new URL('../public/index.html', import.meta.url)));
-}).listen(3400, () => console.log(`http://localhost:3400  (passcode: ${process.env.DASHBOARD_PASSCODE === 'demo' ? 'demo' : 'from .env'}, storage: ${usingMemory() ? 'memory + simulated calls' : 'Supabase'})`));
+}).listen(3400, () => console.log(`http://localhost:3400  (storage: ${usingMemory() ? 'memory + simulated calls' : 'Supabase'})`));
