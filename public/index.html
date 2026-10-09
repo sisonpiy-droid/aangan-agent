@@ -64,7 +64,30 @@
   .chat .CALLER .who { color: var(--accent); }
   .task { border-left: 3px solid var(--accent); padding: 6px 12px; margin: 10px 0; background: var(--soft); border-radius: 0 8px 8px 0; }
   @media (max-width: 640px) { .lead { grid-template-columns: 1fr; } .meta { text-align: left; } .kpi .v { font-size: 28px; } }
+
+  .tabs { display: flex; gap: 6px; padding: 5px; background: var(--soft); border: 1px solid var(--line); border-radius: 999px; width: fit-content; max-width: 100%; overflow-x: auto; margin: 0 0 22px; }
+  .tabs button { border: 0; background: transparent; padding: 8px 18px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+  .tabs button[aria-selected=true] { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(60,40,20,.15); }
+  .lede { color: var(--muted); margin: -8px 0 18px; max-width: 62ch; }
+  .board { display: grid; gap: 12px; grid-template-columns: repeat(5, minmax(210px, 1fr)); overflow-x: auto; padding-bottom: 8px; align-items: start; }
+  .col { background: var(--soft); border: 1px solid var(--line); border-radius: 16px; padding: 12px; min-height: 120px; }
+  .col h3 { margin: 0; font: 600 16px var(--serif); display: flex; justify-content: space-between; align-items: baseline; }
+  .col h3 b { font: 600 13px system-ui; color: var(--muted); background: var(--card); border-radius: 999px; padding: 1px 9px; }
+  .col .why { color: var(--muted); font-size: 12.5px; margin: 2px 0 10px; }
+  .col.urgent { border-color: var(--bad); } .col.urgent h3 { color: var(--bad); }
+  .tcard { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }
+  .tcard:hover { border-color: var(--accent); }
+  .tcard .who { font-size: 14.5px; } .tcard .small { display: block; }
+  .tcard .next { font-size: 12.5px; padding: 4px 8px; margin-top: 6px; }
+  .tcard .links { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12.5px; }
+  .steps { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); margin-top: 18px; counter-reset: s; }
+  .steps li { list-style: none; counter-increment: s; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 14px; }
+  .steps li::before { content: counter(s); display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+  .steps b { display: block; }
+  .video { aspect-ratio: 16 / 9; width: 100%; border: 1px solid var(--line); border-radius: 16px; background: #1f1812; display: grid; place-items: center; color: #e9dccb; text-align: center; overflow: hidden; }
+  .video iframe, .video video { width: 100%; height: 100%; border: 0; }
 </style>
+
 </head>
 <body>
 <form id="login" class="card" hidden>
@@ -86,21 +109,45 @@
   </header>
   <div id="detail" hidden></div>
   <div id="dash">
-  <div id="rateWarn" class="card warn" hidden>Cost rates aren't set (VAANI_INR_PER_MIN), so the cost figures show ₹0.</div>
-  <div id="crmFail" class="card warn" hidden><span id="crmFailText"></span> <button id="retry">Retry failed syncs</button> <span id="retryMsg" class="small"></span></div>
-  <div id="unmatched" class="card warn" hidden></div>
-  <div class="kpis" id="kpis"></div>
-  <div class="section-head"><h2>Leads and next actions</h2><div class="chips" id="chips"></div></div>
-  <div class="feed" id="feed"></div>
-  <details class="more"><summary>More numbers</summary><div class="kpis" id="kpis2"></div></details>
-  <div class="two">
-    <section class="card"><h2>Calls per day</h2><div class="bars" id="bars"></div><div class="small" id="barsLabel"></div></section>
-    <section class="card"><h2>Agent checks</h2><ul class="reasons" id="flags"></ul></section>
-  </div>
-  <div class="two">
-    <section class="card"><h2>Why declined</h2><ul class="reasons" id="declined"></ul></section>
-    <section class="card"><h2>Why sent for review</h2><ul class="reasons" id="review"></ul></section>
-  </div>
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button role="tab" data-tab="founder" aria-selected="true">Founder</button>
+    <button role="tab" data-tab="team" aria-selected="false">Sales &amp; design team</button>
+    <button role="tab" data-tab="video" aria-selected="false">How it works</button>
+  </nav>
+
+  <section id="tab-founder">
+    <div id="rateWarn" class="card warn" hidden>Cost rates aren't set (VAANI_INR_PER_MIN), so the cost figures show ₹0.</div>
+    <div id="crmFail" class="card warn" hidden><span id="crmFailText"></span> <button id="retry">Retry failed syncs</button> <span id="retryMsg" class="small"></span></div>
+    <div id="unmatched" class="card warn" hidden></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="two">
+      <section class="card"><h2>Calls per day</h2><div class="bars" id="bars"></div><div class="small" id="barsLabel"></div></section>
+      <section class="card"><h2>Agent checks</h2><ul class="reasons" id="flags"></ul></section>
+    </div>
+    <div class="two">
+      <section class="card"><h2>Why declined</h2><ul class="reasons" id="declined"></ul></section>
+      <section class="card"><h2>Why sent for review</h2><ul class="reasons" id="review"></ul></section>
+    </div>
+    <div class="section-head"><h2>Latest calls</h2></div>
+    <div class="feed" id="feed"></div>
+    <details class="more"><summary>More numbers</summary><div class="kpis" id="kpis2"></div></details>
+  </section>
+
+  <section id="tab-team" hidden>
+    <p class="lede">Every call the AI answered, sorted by what needs doing. Open a lead for the transcript, the summary and the HubSpot link.</p>
+    <div class="board" id="board"></div>
+  </section>
+
+  <section id="tab-video" hidden>
+    <div class="video" id="videoBox"></div>
+    <ol class="steps">
+      <li><b>A prospect calls</b>Vaani answers 24/7, in a warm, short conversation.</li>
+      <li><b>The AI takes notes</b>Name, area, rooms, size, deadline and who decides. Never a price or a time slot.</li>
+      <li><b>Rules decide</b>Qualified, needs review, declined or escalated: decided in code, never by the AI.</li>
+      <li><b>Team is told</b>HubSpot gets the deal, note and task. Telegram gets the brief and the transcript.</li>
+      <li><b>Booking link goes out</b>The designer sends the Calendly link; the consultation shows up here.</li>
+    </ol>
+  </section>
   </div>
 </main>
 
@@ -175,29 +222,66 @@ async function load() {
   render(await res.json());
 }
 
-let FILTER = 'ALL', LAST = null;
-const STATUS_LABEL = { ALL: 'All', QUALIFIED: 'Qualified', NEEDS_REVIEW: 'Needs review', DECLINED: 'Declined', ESCALATE: 'Escalated' };
+// Put the explainer in public/ (e.g. /explainer.mp4) or paste a YouTube/Loom/Drive embed link here.
+const VIDEO_URL = '';
+let LAST = null;
+const STATUS_LABEL = { QUALIFIED: 'Qualified', NEEDS_REVIEW: 'Needs review', DECLINED: 'Declined', ESCALATE: 'Escalated' };
 const fmt = iso => new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+const BOOKED = ['booked', 'rescheduled'];
+// First matching column wins. Columns come from what the rules and Calendly already know, not from anything a designer types.
+const COLS = [
+  ['Call back now', 'A person should ring today', 'urgent', r => ['escalation', 'callback'].includes(r.task)],
+  ['New leads', 'Qualified: send the booking link', '', r => r.status === 'QUALIFIED' && !BOOKED.includes(r.consultation)],
+  ['In progress', 'Consultation booked', '', r => BOOKED.includes(r.consultation)],
+  ['To review', 'The AI was not sure', '', r => r.task === 'review'],
+  ['Later', 'Asked for a later start', '', r => r.task === 'recontact'],
+];
 
 function renderFeed() {
-  const rows = (LAST?.recent ?? []).filter(r => FILTER === 'ALL' || r.status === FILTER);
-  $('chips').innerHTML = Object.entries(STATUS_LABEL).map(([k, t]) => `<button class="chip" data-f="${k}" aria-pressed="${k === FILTER}">${t}</button>`).join('');
+  const rows = (LAST?.recent ?? []).slice(0, 6);
   $('feed').innerHTML = rows.length ? rows.map(r => `<article class="card lead">
     <span class="pill ${r.status}">${esc(STATUS_LABEL[r.status] ?? r.status)}</span>
     <div>
       <div class="who"><a href="?lead=${encodeURIComponent(r.id)}">${esc(r.name ?? 'Caller')}</a><span class="small"> · ${esc(r.locality ?? 'area not given')} · ${esc(r.phone ?? 'no caller ID')}</span></div>
       ${r.summary ? `<p class="sum">${esc(r.summary)}</p>` : ''}
-      ${r.next ? `<div class="next"><b>Next:</b> ${esc(r.next)}</div>` : ''}
       ${r.flags?.length ? `<div class="small" style="color:var(--bad);margin-top:6px">⚠ ${esc(r.flags.map(human).join(', '))}</div>` : ''}
       ${(r.reasons?.length || r.notes?.length) ? `<div class="small" style="margin-top:6px">${esc([...(r.reasons ?? []), ...(r.notes ?? [])].map(human).join(' · '))}</div>` : ''}
     </div>
     <div class="meta">${esc(fmt(r.at))}<br>${r.mins} min · ${inr(r.cost)}
-      ${r.consultation ? `<br>${esc(human(r.consultation))}` : ''}
-      ${r.crm === 'synced' && r.crmUrl ? `<a href="${esc(r.crmUrl)}" target="_blank" rel="noopener">HubSpot ↗</a>` : r.crm === 'failed' ? `<span style="color:var(--bad)" title="${esc(r.crmError)}">CRM failed</span>` : ''}
       <a href="?lead=${encodeURIComponent(r.id)}">Open lead</a>
-    </div></article>`).join('') : '<div class="card empty">No calls in this view yet.</div>';
+    </div></article>`).join('') : '<div class="card empty">No calls yet.</div>';
 }
-$('chips').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (b) { FILTER = b.dataset.f; renderFeed(); } });
+
+function renderBoard() {
+  const rows = LAST?.recent ?? [];
+  const taken = new Set();
+  $('board').innerHTML = COLS.map(([title, why, cls, pick]) => {
+    const mine = rows.filter(r => !taken.has(r.id) && pick(r));
+    mine.forEach(r => taken.add(r.id));
+    return `<div class="col ${cls}"><h3>${title}<b>${mine.length}</b></h3><div class="why">${why}</div>${mine.map(r => `<article class="tcard">
+      <div class="who"><a href="?lead=${encodeURIComponent(r.id)}">${esc(r.name ?? 'Caller')}</a><span class="small">${esc(r.locality ?? 'area not given')} · ${esc(fmt(r.at))}</span></div>
+      ${r.next ? `<div class="next">${esc(r.next)}</div>` : ''}
+      ${r.consultation === 'canceled' ? '<div class="small" style="color:var(--bad)">consultation canceled</div>' : ''}
+      ${r.consultationStart ? `<div class="small">Consultation ${esc(fmt(r.consultationStart))}</div>` : ''}
+      <div class="links">${r.crm === 'synced' && r.crmUrl ? `<a href="${esc(r.crmUrl)}" target="_blank" rel="noopener">HubSpot ↗</a>` : '<span></span>'}<a href="?lead=${encodeURIComponent(r.id)}">Open lead</a></div>
+    </article>`).join('') || '<div class="small">Nothing here.</div>'}</div>`;
+  }).join('');
+}
+
+function showTab(t) {
+  if (!['founder', 'team', 'video'].includes(t)) t = 'founder';
+  for (const b of document.querySelectorAll('.tabs [data-tab]')) b.setAttribute('aria-selected', String(b.dataset.tab === t));
+  for (const n of ['founder', 'team', 'video']) $('tab-' + n).hidden = n !== t;
+  $('controls').hidden = t === 'video';
+  if (location.hash !== '#' + t) history.replaceState(null, '', '#' + t);
+  if (t === 'video' && !$('videoBox').dataset.ready) {
+    $('videoBox').dataset.ready = '1';
+    $('videoBox').innerHTML = !VIDEO_URL ? '<div><b>Explainer video coming soon</b><div class="small" style="color:#cdbda8">A short walkthrough of how every call becomes a handed-off lead.</div></div>'
+      : /\.(mp4|webm)(\?|$)/i.test(VIDEO_URL) ? `<video controls preload="metadata" src="${esc(VIDEO_URL)}"></video>`
+      : `<iframe src="${esc(VIDEO_URL)}" allow="fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+  }
+}
+document.querySelector('.tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
 
 function render(d) {
   LAST = d;
@@ -228,7 +312,7 @@ function render(d) {
   ];
   const tile = ([k, v, sub, cls = '']) => `<div class="card kpi ${cls}"><h2>${k}</h2><div class="v">${esc(v)}</div><div class="s">${esc(sub)}</div></div>`;
   $('kpis').innerHTML = main.map(tile).join(''); $('kpis2').innerHTML = more.map(tile).join('');
-  renderFeed();
+  renderFeed(); renderBoard(); showTab(location.hash.slice(1));
 
   const days = [];
   for (let i = d.days - 1; i >= 0; i--) days.push(new Date(Date.now() + 5.5 * 36e5 - i * 864e5).toISOString().slice(0, 10));
