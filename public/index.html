@@ -104,6 +104,17 @@
   .col.won { border-color: var(--good); } .col.won h3 { color: var(--good); }
   .col.out { background: #f1ebe4; } .col.out h3 { color: var(--muted); }
   .nofit { margin-top: 6px; font-size: 12.5px; font-weight: 700; color: var(--bad); }
+  .tbtn { font: inherit; font-size: 12.5px; color: var(--accent); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; border-radius: 4px; }
+  .tcard .links { align-items: center; } .links .acts { display: flex; gap: 12px; }
+  dialog#trDlg { width: min(680px, calc(100vw - 32px)); max-height: 82vh; border: 1px solid var(--line); border-radius: 20px; padding: 0; background: var(--card); color: var(--ink); box-shadow: 0 20px 60px rgba(60,40,20,.3); }
+  dialog#trDlg::backdrop { background: rgba(42,33,24,.45); }
+  .trhead { display: flex; justify-content: space-between; align-items: start; gap: 12px; padding: 18px 22px 12px; border-bottom: 1px solid var(--line); }
+  .trhead h3 { margin: 0; font: 600 20px Georgia, serif; } .trhead .small { margin-top: 2px; }
+  .trbody { overflow-y: auto; max-height: calc(82vh - 90px); padding: 14px 22px 22px; }
+  .trbody p { margin: 8px 0; padding: 10px 14px; border-radius: 14px; font-size: 14.5px; line-height: 1.45; max-width: 92%; }
+  .trbody p b { display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 2px; }
+  .trbody .AGENT { background: var(--card); border: 1px solid var(--line); } .trbody .AGENT b { color: var(--accent); }
+  .trbody .CALLER { background: var(--soft); margin-left: auto; } .trbody .CALLER b { color: var(--muted); }
 </style>
 
 </head>
@@ -182,6 +193,7 @@
   </section>
   </div>
 </main>
+<dialog id="trDlg" aria-labelledby="trTitle"><div class="trhead"><div><h3 id="trTitle">Transcript</h3><div class="small" id="trSub"></div></div><button id="trClose" aria-label="Close">Close</button></div><div class="trbody" id="trBody"></div></dialog>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>
@@ -285,6 +297,7 @@ function renderFeed() {
       ${(r.reasons?.length || r.notes?.length) ? `<div class="small" style="margin-top:6px">${esc([...(r.reasons ?? []), ...(r.notes ?? [])].map(human).join(' · '))}</div>` : ''}
     </div>
     <div class="meta">${esc(fmt(r.at))}<br>${r.mins} min · ${inr(r.cost)}
+      <button class="tbtn" data-tr="${r.id}">Transcript</button>
       <a href="?lead=${encodeURIComponent(r.id)}">Open lead</a>
     </div></article>`).join('') : '<div class="card empty">No calls yet.</div>';
 }
@@ -314,10 +327,31 @@ function renderBoard() {
       ${dueChip(r.due)}
       ${r.consultation === 'canceled' ? '<div class="small" style="color:var(--bad)">consultation canceled</div>' : ''}
       ${r.consultationStart ? `<div class="small">Consultation ${esc(fmt(r.consultationStart))}</div>` : ''}
-      <div class="links">${r.crm === 'synced' && r.crmUrl ? `<a href="${esc(r.crmUrl)}" target="_blank" rel="noopener">HubSpot ↗</a>` : '<span></span>'}<a href="?lead=${encodeURIComponent(r.id)}">Open lead</a></div>
+      <div class="links">${r.crm === 'synced' && r.crmUrl ? `<a href="${esc(r.crmUrl)}" target="_blank" rel="noopener">HubSpot ↗</a>` : '<span></span>'}<span class="acts"><button class="tbtn" data-tr="${r.id}">Transcript</button><a href="?lead=${encodeURIComponent(r.id)}">Open lead</a></span></div>
     </article>`).join('') || '<div class="small">Nothing here.</div>'}</div>`;
   }).join('');
 }
+
+async function openTranscript(id) {
+  const dlg = $('trDlg'), body = $('trBody');
+  let pass = store.get('pass') || prompt('Transcripts are private. Passcode:');
+  if (!pass) return;
+  $('trTitle').textContent = 'Transcript'; $('trSub').textContent = ''; body.innerHTML = '<p class="small">Loading…</p>';
+  dlg.showModal();
+  try {
+    const r = await fetch('/api/lead?id=' + encodeURIComponent(id), { headers: { 'x-passcode': pass } });
+    if (r.status === 401) { store.set('pass', ''); body.innerHTML = '<p class="small">Wrong passcode. Close this and try again.</p>'; return; }
+    if (!r.ok) { body.innerHTML = '<p class="small">Could not load it (' + r.status + ').</p>'; return; }
+    store.set('pass', pass);
+    const d = await r.json(), l = d.lead ?? {};
+    $('trTitle').textContent = (l.name ?? 'Transcript') + (l.enquiry_ref ? ' · ' + l.enquiry_ref : '');
+    $('trSub').textContent = [CH[l.channel] ?? 'Call', fmt(d.call_started_at)].join(' · ');
+    body.innerHTML = (d.transcript ?? []).map(t => `<p class="${esc(t.role)}"><b>${t.role === 'AGENT' ? 'Aangan' : 'Caller'}</b>${esc(t.text)}</p>`).join('') || '<p class="small">Nothing was said before the call dropped.</p>';
+  } catch { body.innerHTML = '<p class="small">Could not load it. Check your connection.</p>'; }
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-tr]'); if (b) openTranscript(b.dataset.tr); });
+$('trClose').addEventListener('click', () => $('trDlg').close());
+$('trDlg').addEventListener('click', e => { if (e.target === $('trDlg')) $('trDlg').close(); });
 
 const motion = () => !!window.gsap && !matchMedia('(prefers-reduced-motion: reduce)').matches;
 let CUR = null;
