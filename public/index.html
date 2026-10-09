@@ -69,7 +69,7 @@
   .tabs button { border: 0; background: transparent; padding: 8px 18px; font-weight: 600; color: var(--muted); white-space: nowrap; }
   .tabs button[aria-selected=true] { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(60,40,20,.15); }
   .lede { color: var(--muted); margin: -8px 0 18px; max-width: 62ch; }
-  .board { display: grid; gap: 12px; grid-template-columns: repeat(5, minmax(210px, 1fr)); overflow-x: auto; padding-bottom: 8px; align-items: start; }
+  .board { display: grid; gap: 12px; grid-template-columns: repeat(6, minmax(215px, 1fr)); overflow-x: auto; padding-bottom: 8px; align-items: start; }
   .col { background: var(--soft); border: 1px solid var(--line); border-radius: 16px; padding: 12px; min-height: 120px; }
   .col h3 { margin: 0; font: 600 16px var(--serif); display: flex; justify-content: space-between; align-items: baseline; }
   .col h3 b { font: 600 13px system-ui; color: var(--muted); background: var(--card); border-radius: 999px; padding: 1px 9px; }
@@ -100,10 +100,10 @@
   .tcard .prog { margin: 6px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.35; }
   .due { margin-top: 8px; font-size: 12px; font-weight: 700; color: var(--muted); }
   .due.late { color: var(--bad); } .due.soon { color: var(--warn); }
-  details.closed { margin-top: 18px; } details.closed summary { cursor: pointer; font: 600 18px Georgia, serif; margin-bottom: 10px; }
-  .closed .row { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; }
-  .closed .row .small { grid-column: 2; }
   .stat { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--line); } .stat:last-child { border: 0; } .stat b { font-variant-numeric: tabular-nums; }
+  .col.won { border-color: var(--good); } .col.won h3 { color: var(--good); }
+  .col.out { background: #f1ebe4; } .col.out h3 { color: var(--muted); }
+  .nofit { margin-top: 6px; font-size: 12.5px; font-weight: 700; color: var(--bad); }
 </style>
 
 </head>
@@ -168,7 +168,6 @@
   <section id="tab-team" hidden>
     <p class="lede">Every enquiry from calls, WhatsApp and the web form, sorted by what needs doing, with what happened so far and when the next step is due. Open a lead for the transcript.</p>
     <div class="board" id="board"></div>
-    <details class="closed" id="closedBox"><summary id="closedTitle">Closed</summary><div id="closedList"></div></details>
   </section>
 
   <section id="tab-video" hidden>
@@ -262,12 +261,17 @@ const STATUS_LABEL = { QUALIFIED: 'Qualified', NEEDS_REVIEW: 'Needs review', DEC
 const fmt = iso => new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
 const BOOKED = ['booked', 'rescheduled'];
 // First matching column wins. Columns come from what the rules and Calendly already know, not from anything a designer types.
+const NOFIT = { OUT_OF_AREA: 'Outside Pune and PCMC', BUSINESS_TYPE_OUT_OF_SCOPE: 'A type of space we do not design', NOT_A_FULL_PROJECT: 'Advice only, not a full project', TIMELINE_TOO_SHORT: 'Deadline too short', BUDGET_CLEARLY_BELOW: 'Budget far below the scope' };
+const unqualified = r => r.status === 'DECLINED' || r.stage === 'lost';
+const whyNo = r => (r.stage === 'lost' ? 'No reply: lead lost' : (r.reasons ?? []).map(x => NOFIT[x] ?? human(x)).join(' · '));
+// "Converted" = the consultation is booked (what this system can see), or a designer marked the project signed with stage "converted".
 const COLS = [
-  ['Call back now', 'A person should ring today', 'urgent', r => ['escalation', 'callback'].includes(r.task)],
-  ['New leads', 'Qualified: send the booking link', '', r => r.status === 'QUALIFIED' && !BOOKED.includes(r.consultation)],
-  ['In progress', 'Consultation booked', '', r => BOOKED.includes(r.consultation)],
-  ['To review', 'The AI was not sure', '', r => r.task === 'review'],
-  ['Later', 'Asked for a later start', '', r => r.task === 'recontact'],
+  ['Call back today', 'Someone should phone them now', 'urgent', r => ['escalation', 'callback'].includes(r.task)],
+  ['New leads', 'Qualified. Send the booking link', '', r => r.status === 'QUALIFIED' && !BOOKED.includes(r.consultation) && r.stage !== 'converted'],
+  ['Needs a decision', 'The AI was not sure. A person decides', '', r => r.task === 'review' && !BOOKED.includes(r.consultation)],
+  ['Converted', 'Consultation booked or project signed', 'won', r => BOOKED.includes(r.consultation) || r.stage === 'converted'],
+  ['Follow up later', 'Not ready yet. Contact them on the date', '', r => r.task === 'recontact'],
+  ['Unqualified', 'Not a fit, or no reply. Closed', 'out', unqualified],
 ];
 
 function renderFeed() {
@@ -304,6 +308,7 @@ function renderBoard() {
     mine.forEach(r => taken.add(r.id));
     return `<div class="col ${cls}"><h3>${title}<b>${mine.length}</b></h3><div class="why">${why}</div>${mine.map(r => `<article class="tcard">
       <div class="who"><a href="?lead=${encodeURIComponent(r.id)}">${esc(label(r))}</a><span class="ch">${esc(CH[r.channel] ?? r.channel)}</span><span class="small">${esc(r.locality ?? 'area not given')} · ${esc(fmt(r.at))}</span></div>
+      ${unqualified(r) ? `<div class="nofit">${esc(whyNo(r))}</div>` : ''}
       ${r.progress ? `<p class="prog">${esc(r.progress)}</p>` : ''}
       ${r.next ? `<div class="next">${esc(r.next)}</div>` : ''}
       ${dueChip(r.due)}
@@ -312,11 +317,6 @@ function renderBoard() {
       <div class="links">${r.crm === 'synced' && r.crmUrl ? `<a href="${esc(r.crmUrl)}" target="_blank" rel="noopener">HubSpot ↗</a>` : '<span></span>'}<a href="?lead=${encodeURIComponent(r.id)}">Open lead</a></div>
     </article>`).join('') || '<div class="small">Nothing here.</div>'}</div>`;
   }).join('');
-  const rest = rows.filter(r => !taken.has(r.id));
-  $('closedTitle').textContent = `Closed: declined or lost (${rest.length})`;
-  $('closedList').innerHTML = rest.map(r => `<div class="row"><span class="pill ${r.status}">${esc(r.stage === 'lost' ? 'Lost' : STATUS_LABEL[r.status] ?? r.status)}</span>
-    <div><a href="?lead=${encodeURIComponent(r.id)}">${esc(label(r))}</a><span class="ch">${esc(CH[r.channel] ?? r.channel)}</span> <span class="small">${esc(r.locality ?? '')} · ${esc(fmt(r.at))}</span></div>
-    <div class="small">${esc(r.progress ?? [...(r.reasons ?? [])].map(human).join(', '))}</div></div>`).join('') || '<div class="small">Nothing closed yet.</div>';
 }
 
 const motion = () => !!window.gsap && !matchMedia('(prefers-reduced-motion: reduce)').matches;
