@@ -86,6 +86,16 @@
   .steps b { display: block; }
   .video { aspect-ratio: 16 / 9; width: 100%; border: 1px solid var(--line); border-radius: 16px; background: #1f1812; display: grid; place-items: center; color: #e9dccb; text-align: center; overflow: hidden; }
   .video iframe, .video video { width: 100%; height: 100%; border: 0; }
+  .home { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); margin-top: 8px; }
+  .door { display: block; text-decoration: none; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 28px 26px 24px; min-height: 230px; transition: border-color .15s, transform .15s, box-shadow .15s; }
+  .door:hover, .door:focus-visible { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(90,60,30,.10); }
+  .door .ico { width: 46px; height: 46px; border-radius: 14px; background: var(--soft); display: grid; place-items: center; font-size: 22px; margin-bottom: 18px; }
+  .door h2 { font: 600 24px/1.15 var(--serif); text-transform: none; letter-spacing: -.01em; color: var(--ink); margin: 0 0 8px; }
+  .door p { color: var(--muted); margin: 0 0 16px; }
+  .door .go { color: var(--accent); font-weight: 600; font-size: 14px; }
+  .door .live { display: block; margin-top: 12px; font-size: 13px; color: var(--ink); }
+  .back { display: inline-block; margin: 0 0 14px; font-size: 14px; text-decoration: none; }
+  .tabs[hidden] { display: none; }
 </style>
 
 </head>
@@ -100,7 +110,7 @@
 
 <main id="app" hidden>
   <header>
-    <div class="brand"><div class="mark">A</div><div><h1>Aangan Call Desk</h1><div class="tag">AI front desk · every call answered, every lead handed off</div></div></div>
+    <a class="brand" href="#home" style="text-decoration:none;color:inherit"><div class="mark">A</div><div><h1>Aangan Call Desk</h1><div class="tag">AI front desk · every call answered, every lead handed off</div></div></a>
     <div id="controls">
       <label for="days" class="small">Period</label>
       <select id="days"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option></select>
@@ -109,7 +119,17 @@
   </header>
   <div id="detail" hidden></div>
   <div id="dash">
-  <nav class="tabs" role="tablist" aria-label="Views">
+  <section id="tab-home">
+    <p class="lede">Choose your view.</p>
+    <div class="home">
+      <a class="door" href="#founder"><div class="ico">📈</div><h2>Founder</h2><p>What is happening across every call: volumes, outcomes, handoff speed and what it costs to run.</p><span class="go">Open dashboard →</span><span class="live" id="liveFounder"></span></a>
+      <a class="door" href="#team"><div class="ico">🗂️</div><h2>Sales &amp; design team</h2><p>New leads, work in progress and what to do next, sorted for the day.</p><span class="go">Open the board →</span><span class="live" id="liveTeam"></span></a>
+      <a class="door" href="#video"><div class="ico">▶️</div><h2>How it works</h2><p>A short video of how a phone call becomes a handed-off lead.</p><span class="go">Watch →</span></a>
+    </div>
+  </section>
+
+  <a class="back" id="backHome" href="#home" hidden>← Home</a>
+  <nav class="tabs" id="tabsNav" role="tablist" aria-label="Views" hidden>
     <button role="tab" data-tab="founder" aria-selected="true">Founder</button>
     <button role="tab" data-tab="team" aria-selected="false">Sales &amp; design team</button>
     <button role="tab" data-tab="video" aria-selected="false">How it works</button>
@@ -268,11 +288,14 @@ function renderBoard() {
 }
 
 function showTab(t) {
-  if (!['founder', 'team', 'video'].includes(t)) t = 'founder';
+  if (!['home', 'founder', 'team', 'video'].includes(t)) t = 'home';
+  const home = t === 'home';
+  $('tab-home').hidden = !home; $('tabsNav').hidden = home; $('backHome').hidden = home;
   for (const b of document.querySelectorAll('.tabs [data-tab]')) b.setAttribute('aria-selected', String(b.dataset.tab === t));
   for (const n of ['founder', 'team', 'video']) $('tab-' + n).hidden = n !== t;
-  $('controls').hidden = t === 'video';
+  $('controls').hidden = t === 'video' || home;
   if (location.hash !== '#' + t) history.replaceState(null, '', '#' + t);
+  scrollTo(0, 0);
   if (t === 'video' && !$('videoBox').dataset.ready) {
     $('videoBox').dataset.ready = '1';
     $('videoBox').innerHTML = !VIDEO_URL ? '<div><b>Explainer video coming soon</b><div class="small" style="color:#cdbda8">A short walkthrough of how every call becomes a handed-off lead.</div></div>'
@@ -280,6 +303,7 @@ function showTab(t) {
       : `<iframe src="${esc(VIDEO_URL)}" allow="fullscreen; picture-in-picture" allowfullscreen></iframe>`;
   }
 }
+addEventListener('hashchange', () => showTab(location.hash.slice(1)));
 document.querySelector('.tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
 
 function render(d) {
@@ -311,7 +335,11 @@ function render(d) {
   ];
   const tile = ([k, v, sub, cls = '']) => `<div class="card kpi ${cls}"><h2>${k}</h2><div class="v">${esc(v)}</div><div class="s">${esc(sub)}</div></div>`;
   $('kpis').innerHTML = main.map(tile).join(''); $('kpis2').innerHTML = more.map(tile).join('');
-  renderFeed(); renderBoard(); showTab(location.hash.slice(1));
+  renderFeed(); renderBoard();
+  const open = n => document.querySelectorAll('#board .col')[n]?.querySelector('h3 b')?.textContent ?? '0';
+  $('liveFounder').textContent = `${d.calls} calls · ${s.QUALIFIED ?? 0} sent to designers`;
+  $('liveTeam').textContent = `${open(0)} to call back · ${open(1)} new leads`;
+  showTab(location.hash.slice(1));
 
   const days = [];
   for (let i = d.days - 1; i >= 0; i--) days.push(new Date(Date.now() + 5.5 * 36e5 - i * 864e5).toISOString().slice(0, 10));
