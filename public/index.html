@@ -96,6 +96,14 @@
   .door .live { display: block; margin-top: 12px; font-size: 13px; color: var(--ink); }
   .back { display: inline-block; margin: 0 0 14px; font-size: 14px; text-decoration: none; }
   .tabs[hidden] { display: none; }
+  .ch { display: inline-block; margin-left: 6px; padding: 0 8px; border-radius: 999px; background: var(--soft); border: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .03em; vertical-align: 1px; }
+  .tcard .prog { margin: 6px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+  .due { margin-top: 8px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .due.late { color: var(--bad); } .due.soon { color: var(--warn); }
+  details.closed { margin-top: 18px; } details.closed summary { cursor: pointer; font: 600 18px Georgia, serif; margin-bottom: 10px; }
+  .closed .row { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  .closed .row .small { grid-column: 2; }
+  .stat { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--line); } .stat:last-child { border: 0; } .stat b { font-variant-numeric: tabular-nums; }
 </style>
 
 </head>
@@ -113,7 +121,7 @@
     <a class="brand" href="#home" style="text-decoration:none;color:inherit"><div class="mark">A</div><div><h1>Aangan Call Desk</h1><div class="tag">AI front desk · every call answered, every lead handed off</div></div></a>
     <div id="controls">
       <label for="days" class="small">Period</label>
-      <select id="days"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option></select>
+      <select id="days"><option value="7">7 days</option><option value="30">30 days</option><option value="90" selected>90 days</option><option value="365">A year</option></select>
       <button id="refresh">Refresh</button>
     </div>
   </header>
@@ -148,14 +156,19 @@
       <section class="card"><h2>Why declined</h2><ul class="reasons" id="declined"></ul></section>
       <section class="card"><h2>Why sent for review</h2><ul class="reasons" id="review"></ul></section>
     </div>
-    <div class="section-head"><h2>Latest calls</h2></div>
+    <div class="two">
+      <section class="card"><h2>Where enquiries come from</h2><div id="vChannels"></div></section>
+      <section class="card"><h2>How fast they were answered</h2><div id="vResponse"></div></section>
+    </div>
+    <div class="section-head"><h2>Latest enquiries</h2></div>
     <div class="feed" id="feed"></div>
     <details class="more"><summary>More numbers</summary><div class="kpis" id="kpis2"></div></details>
   </section>
 
   <section id="tab-team" hidden>
-    <p class="lede">Every call the AI answered, sorted by what needs doing. Open a lead for the transcript, the summary and the HubSpot link.</p>
+    <p class="lede">Every enquiry from calls, WhatsApp and the web form, sorted by what needs doing, with what happened so far and when the next step is due. Open a lead for the transcript.</p>
     <div class="board" id="board"></div>
+    <details class="closed" id="closedBox"><summary id="closedTitle">Closed</summary><div id="closedList"></div></details>
   </section>
 
   <section id="tab-video" hidden>
@@ -272,6 +285,17 @@ function renderFeed() {
     </div></article>`).join('') : '<div class="card empty">No calls yet.</div>';
 }
 
+const CH = { phone: 'Call', whatsapp: 'WhatsApp', form: 'Web form' };
+const day = iso => new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short' });
+const dueChip = iso => {
+  if (!iso) return '';
+  const ms = Date.parse(iso) - Date.now(), d = Math.round(Math.abs(ms) / 864e5), hrs = Math.round(Math.abs(ms) / 36e5);
+  const gap = d >= 1 ? `${d} day${d > 1 ? 's' : ''}` : `${Math.max(hrs, 1)} h`;
+  return `<div class="due ${ms < 0 ? 'late' : ms < 7 * 864e5 ? 'soon' : ''}">Due ${esc(day(iso))} · ${ms < 0 ? `overdue ${gap}` : `in ${gap}`}</div>`;
+};
+const label = r => r.name ?? (r.ref ? `${CH[r.channel] ?? 'Enquiry'} ${r.ref}` : 'Caller');
+const mins = m => (m == null ? '—' : m < 90 ? `${m} min` : m < 2880 ? `${Math.round(m / 60)} h` : `${Math.round(m / 1440)} days`);
+
 function renderBoard() {
   const rows = LAST?.recent ?? [];
   const taken = new Set();
@@ -279,13 +303,20 @@ function renderBoard() {
     const mine = rows.filter(r => !taken.has(r.id) && pick(r));
     mine.forEach(r => taken.add(r.id));
     return `<div class="col ${cls}"><h3>${title}<b>${mine.length}</b></h3><div class="why">${why}</div>${mine.map(r => `<article class="tcard">
-      <div class="who"><a href="?lead=${encodeURIComponent(r.id)}">${esc(r.name ?? 'Caller')}</a><span class="small">${esc(r.locality ?? 'area not given')} · ${esc(fmt(r.at))}</span></div>
+      <div class="who"><a href="?lead=${encodeURIComponent(r.id)}">${esc(label(r))}</a><span class="ch">${esc(CH[r.channel] ?? r.channel)}</span><span class="small">${esc(r.locality ?? 'area not given')} · ${esc(fmt(r.at))}</span></div>
+      ${r.progress ? `<p class="prog">${esc(r.progress)}</p>` : ''}
       ${r.next ? `<div class="next">${esc(r.next)}</div>` : ''}
+      ${dueChip(r.due)}
       ${r.consultation === 'canceled' ? '<div class="small" style="color:var(--bad)">consultation canceled</div>' : ''}
       ${r.consultationStart ? `<div class="small">Consultation ${esc(fmt(r.consultationStart))}</div>` : ''}
       <div class="links">${r.crm === 'synced' && r.crmUrl ? `<a href="${esc(r.crmUrl)}" target="_blank" rel="noopener">HubSpot ↗</a>` : '<span></span>'}<a href="?lead=${encodeURIComponent(r.id)}">Open lead</a></div>
     </article>`).join('') || '<div class="small">Nothing here.</div>'}</div>`;
   }).join('');
+  const rest = rows.filter(r => !taken.has(r.id));
+  $('closedTitle').textContent = `Closed: declined or lost (${rest.length})`;
+  $('closedList').innerHTML = rest.map(r => `<div class="row"><span class="pill ${r.status}">${esc(r.stage === 'lost' ? 'Lost' : STATUS_LABEL[r.status] ?? r.status)}</span>
+    <div><a href="?lead=${encodeURIComponent(r.id)}">${esc(label(r))}</a><span class="ch">${esc(CH[r.channel] ?? r.channel)}</span> <span class="small">${esc(r.locality ?? '')} · ${esc(fmt(r.at))}</span></div>
+    <div class="small">${esc(r.progress ?? [...(r.reasons ?? [])].map(human).join(', '))}</div></div>`).join('') || '<div class="small">Nothing closed yet.</div>';
 }
 
 const motion = () => !!window.gsap && !matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -342,7 +373,7 @@ function render(d) {
     : d.consultations.tracking === 'manual' ? ['Booking links sent', d.consultations.awaiting, 'booking status is tracked by hand in HubSpot']
     : ['Consultations booked', d.consultations.booked, `${pct(d.consultations.booked, s.QUALIFIED ?? 0)} of qualified · ${d.consultations.awaiting} awaiting`];
   const main = [
-    ['Calls answered', d.calls, `${pct(d.afterHours, d.calls)} outside 10am–7pm or weekends`],
+    ['Enquiries', d.calls, `${pct(d.afterHours, d.calls)} outside 10am–7pm or weekends`],
     ['Sent to designers', s.QUALIFIED ?? 0, `${pct(s.QUALIFIED ?? 0, d.calls)} of calls`, 'hot'],
     ['Needs review', s.NEEDS_REVIEW ?? 0, 'a human decides'],
     booking,
@@ -359,8 +390,13 @@ function render(d) {
   const tile = ([k, v, sub, cls = '']) => `<div class="card kpi ${cls}"><h2>${k}</h2><div class="v">${esc(v)}</div><div class="s">${esc(sub)}</div></div>`;
   $('kpis').innerHTML = main.map(tile).join(''); $('kpis2').innerHTML = more.map(tile).join('');
   renderFeed(); renderBoard();
+  const sc = Object.entries(d.channels ?? {}).sort((a, b) => b[1] - a[1]);
+  $('vChannels').innerHTML = sc.map(([k, n]) => `<div class="stat"><span>${esc(CH[k] ?? k)}</span><b>${n}</b></div>`).join('') || '<div class="empty">No enquiries yet.</div>';
+  const rs = d.response ?? {};
+  $('vResponse').innerHTML = [['Answered within an hour', rs.within1h], ['Took over an hour', rs.later], ['Waited over two days', rs.over2d], ['Never answered', rs.never], ['Not recorded (web forms)', rs.notRecorded], ['Median first reply', mins(rs.medianMin)]]
+    .map(([k, v]) => `<div class="stat"><span>${k}</span><b>${v ?? 0}</b></div>`).join('');
   const open = n => document.querySelectorAll('#board .col')[n]?.querySelector('h3 b')?.textContent ?? '0';
-  $('liveFounder').textContent = `${d.calls} calls · ${s.QUALIFIED ?? 0} sent to designers`;
+  $('liveFounder').textContent = `${d.calls} enquiries · ${s.QUALIFIED ?? 0} sent to designers`;
   $('liveTeam').textContent = `${open(0)} to call back · ${open(1)} new leads`;
   showTab(location.hash.slice(1));
 
