@@ -171,6 +171,7 @@
   </div>
 </main>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const store = { get: k => { try { return sessionStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { sessionStorage.setItem(k, v); } catch {} } };
@@ -287,6 +288,27 @@ function renderBoard() {
   }).join('');
 }
 
+const motion = () => !!window.gsap && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+let CUR = null;
+function enter(t) {
+  if (!motion()) return;
+  const root = $('tab-' + t);
+  const rise = (sel, o = {}) => { const n = root.querySelectorAll(sel); if (n.length) gsap.from(n, { y: 20, opacity: 0, duration: .55, ease: 'power2.out', stagger: .07, clearProps: 'transform,opacity', ...o }); };
+  if (t === 'home') rise('.door', { y: 32, duration: .7, stagger: .12 });
+  if (t === 'founder') {
+    rise('.kpi'); rise('.two .card', { delay: .25 }); rise('#feed .card', { delay: .4, y: 12 });
+    gsap.from('#bars div', { scaleY: 0, transformOrigin: 'bottom', duration: .6, stagger: .012, delay: .3, ease: 'power2.out', clearProps: 'transform' });
+    for (const el of root.querySelectorAll('.kpi .v')) {
+      const end = el.textContent.trim();
+      if (!/^\d+$/.test(end) || end === '0') continue;
+      const o = { v: 0 };
+      gsap.to(o, { v: Number(end), duration: .9, ease: 'power1.out', onUpdate: () => { el.textContent = Math.round(o.v); }, onComplete: () => { el.textContent = end; } });
+    }
+  }
+  if (t === 'team') { rise('.col', { y: 24 }); rise('.tcard', { y: 14, delay: .25, stagger: .04 }); }
+  if (t === 'video') { rise('.video', { scale: .98 }); rise('.steps li', { delay: .2 }); }
+}
+
 function showTab(t) {
   if (!['home', 'founder', 'team', 'video'].includes(t)) t = 'home';
   const home = t === 'home';
@@ -296,6 +318,7 @@ function showTab(t) {
   $('controls').hidden = t === 'video' || home;
   if (location.hash !== '#' + t) history.replaceState(null, '', '#' + t);
   scrollTo(0, 0);
+  if (t !== CUR) { CUR = t; enter(t); }
   if (t === 'video' && !$('videoBox').dataset.ready) {
     $('videoBox').dataset.ready = '1';
     $('videoBox').innerHTML = !VIDEO_URL ? '<div><b>Explainer video coming soon</b><div class="small" style="color:#cdbda8">A short walkthrough of how every call becomes a handed-off lead.</div></div>'
