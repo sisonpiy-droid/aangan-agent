@@ -93,3 +93,9 @@ test('outbound calls and other events are not treated as enquiries', async () =>
   assert.deepEqual(await handleVaaniEvent({ event: 'call_ended', room_name: 'inbound-103', call_duration: 42.5 }), { logged: 'call_ended' });
   assert.equal(await store.findLead({ phone: 'none' }), null);
 });
+
+test('web call without call_duration: duration falls back to call_started → postprocessing', () => {
+  const call = toCall({ event: 'call_postprocessing', timestamp: '2026-10-08T12:33:00Z', data: { call_id: 'w1', transcript: 'agent: hi\nuser: hello' } },
+    { created_at: '2026-10-08T12:31:30Z', payload: {} });
+  assert.equal(call.durationSec, 90);
+});
