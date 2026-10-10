@@ -13,7 +13,8 @@
     "hubspot:setup": "node --env-file-if-exists=.env scripts/hubspot-setup.mjs",
     "calendly:setup": "node --env-file-if-exists=.env scripts/calendly-setup.mjs",
     "secrets": "node scripts/gen-secrets.mjs",
-    "import:enquiries": "node --env-file-if-exists=.env scripts/import-enquiries.mjs"
+    "import:enquiries": "node --env-file-if-exists=.env scripts/import-enquiries.mjs",
+    "mark:signed": "node --env-file-if-exists=.env scripts/mark-signed.mjs"
   },
   "dependencies": {
     "@vercel/functions": "^3.9.11"

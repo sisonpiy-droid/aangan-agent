@@ -113,6 +113,15 @@
   .trbody p b { display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 2px; }
   .trbody .AGENT { background: var(--card); border: 1px solid var(--line); } .trbody .AGENT b { color: var(--accent); }
   .trbody .CALLER { background: var(--soft); margin-left: auto; } .trbody .CALLER b { color: var(--muted); }
+  .subtabs { display: inline-flex; gap: 4px; padding: 4px; background: var(--soft); border: 1px solid var(--line); border-radius: 999px; margin: 0 0 18px; }
+  .subtabs a { padding: 6px 18px; border-radius: 999px; color: var(--muted); font-weight: 600; text-decoration: none; font-size: 14px; }
+  .subtabs a[aria-current=page] { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(60,40,20,.15); }
+  .money { font: 600 40px/1.1 Georgia, serif; font-variant-numeric: tabular-nums; }
+  .kpi.big { padding: 22px 24px; } .kpi.big .money.won { color: var(--good); } .kpi.big .money.pipe { color: var(--accent); }
+  .brow { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .brow:last-child { border: 0; } .brow .bar { grid-column: 1 / -1; height: 8px; border-radius: 99px; background: var(--soft); overflow: hidden; } .brow .bar i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+  .brow b { font-variant-numeric: tabular-nums; }
+  .basis { display: inline-block; margin-left: 6px; padding: 0 8px; border-radius: 999px; background: var(--soft); border: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 700; }
 </style>
 
 </head>
@@ -146,6 +155,19 @@
   </nav>
 
   <section id="tab-founder">
+    <nav class="subtabs" aria-label="Founder views"><a href="#founder" id="sub-overview" aria-current="page">Overview</a><a href="#revenue" id="sub-revenue">Revenue</a></nav>
+    <div id="fo-revenue" hidden>
+      <div class="kpis" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr))">
+        <div class="card kpi big"><h2>Revenue generated</h2><div class="money won" id="revGen">₹0</div><div class="s" id="revGenSub"></div></div>
+        <div class="card kpi big"><h2>Revenue in pipeline</h2><div class="money pipe" id="revPipe">₹0</div><div class="s" id="revPipeSub"></div></div>
+      </div>
+      <div class="two">
+        <section class="card"><h2>Pipeline by stage</h2><div id="revStages"></div></section>
+        <section class="card"><h2>Biggest open leads</h2><div id="revTop"></div></section>
+      </div>
+      <p class="small" id="revNote"></p>
+    </div>
+    <div id="fo-overview">
     <div id="rateWarn" class="card warn" hidden>Cost rates aren't set (VAANI_INR_PER_MIN), so the cost figures show ₹0.</div>
     <div id="crmFail" class="card warn" hidden><span id="crmFailText"></span> <button id="retry">Retry failed syncs</button> <span id="retryMsg" class="small"></span></div>
     <div id="unmatched" class="card warn" hidden></div>
@@ -165,6 +187,7 @@
     <div class="section-head"><h2>Latest enquiries</h2></div>
     <div class="feed" id="feed"></div>
     <details class="more"><summary>More numbers</summary><div class="kpis" id="kpis2"></div></details>
+    </div>
   </section>
 
   <section id="tab-team" hidden>
@@ -344,7 +367,8 @@ function enter(t) {
   const rise = (sel, o = {}) => { const n = root.querySelectorAll(sel); if (n.length) gsap.from(n, { y: 20, opacity: 0, duration: .55, ease: 'power2.out', stagger: .07, clearProps: 'transform,opacity', ...o }); };
   if (t === 'home') rise('.door', { y: 32, duration: .7, stagger: .12 });
   if (t === 'founder') {
-    rise('.kpi'); rise('.two .card', { delay: .25 }); rise('#feed .card', { delay: .4, y: 12 });
+    const pane = $('fo-revenue').hidden ? '#fo-overview' : '#fo-revenue'; // animate only the panel that is showing
+    rise(pane + ' .kpi'); rise(pane + ' .two .card', { delay: .25 }); rise('#feed .card', { delay: .4, y: 12 });
     gsap.from('#bars div', { scaleY: 0, transformOrigin: 'bottom', duration: .6, stagger: .012, delay: .3, ease: 'power2.out', clearProps: 'transform' });
     for (const el of root.querySelectorAll('.kpi .v')) {
       const end = el.textContent.trim();
@@ -357,14 +381,36 @@ function enter(t) {
   if (t === 'video') { rise('.video', { scale: .98 }); rise('.steps li', { delay: .2 }); }
 }
 
+const money = v => (v >= 1e7 ? `₹${(v / 1e7).toFixed(2)} Cr` : v >= 1e5 ? `₹${(v / 1e5).toFixed(1)} L` : `₹${Math.round(v).toLocaleString('en-IN')}`);
+function setSub(which) {
+  $('fo-overview').hidden = which !== 'overview'; $('fo-revenue').hidden = which !== 'revenue';
+  $('sub-overview').toggleAttribute('aria-current', which === 'overview'); $('sub-revenue').toggleAttribute('aria-current', which === 'revenue');
+  if (which === 'overview') $('sub-overview').setAttribute('aria-current', 'page'); else $('sub-revenue').setAttribute('aria-current', 'page');
+}
+const BASIS = { budget: 'stated budget', size: 'size × floor rate', average: 'average project' };
+function renderRevenue(v) {
+  if (!v) return;
+  $('revGen').textContent = money(v.generated.value);
+  $('revGenSub').textContent = v.generated.count ? `${v.generated.count} signed project${v.generated.count > 1 ? 's' : ''}` : 'No signed project recorded yet. A designer marks one signed with its value.';
+  $('revPipe').textContent = money(v.pipeline.value);
+  $('revPipeSub').textContent = `${v.pipeline.count} open leads, an estimate and not a quote`;
+  const max = Math.max(1, ...v.pipeline.stages.map(s => s.value));
+  $('revStages').innerHTML = v.pipeline.stages.map(s => `<div class="brow"><span>${esc(s.label)} <span class="small">· ${s.count} lead${s.count === 1 ? '' : 's'}</span></span><b>${money(s.value)}</b><div class="bar"><i style="width:${(100 * s.value / max).toFixed(1)}%"></i></div></div>`).join('');
+  $('revTop').innerHTML = v.top.map(t => `<div class="brow"><span><a href="?lead=${encodeURIComponent(t.id)}">${esc(t.name ?? `${CH[t.channel] ?? 'Enquiry'} ${t.ref ?? ''}`.trim())}</a><span class="basis">${esc(BASIS[t.basis] ?? t.basis)}</span><br><span class="small">${esc(t.locality ?? 'area not given')} · ${esc(v.pipeline.stages.find(s => s.key === t.stage)?.label ?? '')}</span></span><b>${money(t.value)}</b></div>`).join('') || '<div class="empty">No open leads.</div>';
+  const b = v.pipeline.basis;
+  $('revNote').textContent = `How it is estimated: the budget the caller volunteered (${b.budget ?? 0} leads), otherwise carpet area × the lowest indicative rate (${b.size ?? 0}), otherwise the middle of the ₹8–14L average project (${b.average ?? 0}). Declined, lost and existing-client leads are left out.`;
+}
+
 function showTab(t) {
-  if (!['home', 'founder', 'team', 'video'].includes(t)) t = 'home';
+  const route = ['home', 'founder', 'revenue', 'team', 'video'].includes(t) ? t : 'home';
+  t = route === 'revenue' ? 'founder' : route;
+  setSub(route === 'revenue' ? 'revenue' : 'overview');
   const home = t === 'home';
   $('tab-home').hidden = !home; $('tabsNav').hidden = home; $('backHome').hidden = home;
   for (const b of document.querySelectorAll('.tabs [data-tab]')) b.setAttribute('aria-selected', String(b.dataset.tab === t));
   for (const n of ['founder', 'team', 'video']) $('tab-' + n).hidden = n !== t;
   $('controls').hidden = t === 'video' || home;
-  if (location.hash !== '#' + t) history.replaceState(null, '', '#' + t);
+  if (location.hash !== '#' + route) history.replaceState(null, '', '#' + route);
   scrollTo(0, 0);
   if (t !== CUR) { CUR = t; enter(t); }
   if (t === 'video' && !$('videoBox').dataset.ready) {
@@ -406,7 +452,7 @@ function render(d) {
   ];
   const tile = ([k, v, sub, cls = '']) => `<div class="card kpi ${cls}"><h2>${k}</h2><div class="v">${esc(v)}</div><div class="s">${esc(sub)}</div></div>`;
   $('kpis').innerHTML = main.map(tile).join(''); $('kpis2').innerHTML = more.map(tile).join('');
-  renderFeed(); renderBoard();
+  renderFeed(); renderBoard(); renderRevenue(d.revenue);
   const sc = Object.entries(d.channels ?? {}).sort((a, b) => b[1] - a[1]);
   $('vChannels').innerHTML = sc.map(([k, n]) => `<div class="stat"><span>${esc(CH[k] ?? k)}</span><b>${n}</b></div>`).join('') || '<div class="empty">No enquiries yet.</div>';
   const rs = d.response ?? {};
