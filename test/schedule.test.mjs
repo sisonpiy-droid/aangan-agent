@@ -47,6 +47,7 @@ test('books the free slot closest to the time asked for, and tells the caller, t
   assert.equal(inv.body.start_time, at(30), 'nearest free slot, not the earliest');
   assert.equal(inv.body.invitee.email, 'priya@example.com');
   assert.equal(inv.body.tracking.utm_content, String(row.id));
+  for (const k of ['utm_campaign', 'utm_medium', 'utm_term', 'salesforce_uuid']) assert.ok(k in inv.body.tracking, `Calendly rejects the booking without tracking.${k}`);
   const saved = await store.findLead({ id: row.id });
   assert.equal(saved.consultation_status, 'booked');
   assert.equal(Date.parse(saved.consultation_start), Date.parse(at(30)));
