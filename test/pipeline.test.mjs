@@ -139,10 +139,10 @@ test('Calendly webhooks available: booking → Supabase + HubSpot stage + Telegr
 test('the agent never promises a slot: booking line is exact and passes the scanner', async () => {
   const { CLOSINGS } = await import('../lib/rules.js');
   const { scanAgentLines } = await import('../lib/scan.js');
-  assert.equal(CLOSINGS.BOOK, "Thank you — I've noted everything. A designer will send you a link where you can choose a convenient consultation time.");
+  assert.equal(CLOSINGS.BOOK, "Thank you — I've noted everything. If it's a fit, you'll get a text message shortly with a link to choose a convenient consultation time.");
   assert.doesNotMatch(CLOSINGS.BOOK, /\d|monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today/i);
   for (const bad of ['I have booked you for Saturday at 11.', 'We have a slot free at 4pm tomorrow.', 'Thursday at 3 is available.', 'See you on Monday!']) {
     assert.deepEqual(scanAgentLines([{ role: 'AGENT', text: bad }]), ['SLOT_PROMISED'], bad);
   }
-  assert.match(readFileSync(new URL('../prompt/agent.md', import.meta.url), 'utf8'), /A designer will send you a link where you can choose a convenient consultation time\./);
+  assert.match(readFileSync(new URL('../prompt/agent.md', import.meta.url), 'utf8'), /you'll get a text message shortly with a link to choose a convenient consultation time\./);
 });

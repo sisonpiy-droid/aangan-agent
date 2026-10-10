@@ -122,6 +122,7 @@
   .brow:last-child { border: 0; } .brow .bar { grid-column: 1 / -1; height: 8px; border-radius: 99px; background: var(--soft); overflow: hidden; } .brow .bar i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
   .brow b { font-variant-numeric: tabular-nums; }
   .basis { display: inline-block; margin-left: 6px; padding: 0 8px; border-radius: 999px; background: var(--soft); border: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 700; }
+  .sentok { margin-top: 6px; font-size: 12px; font-weight: 700; color: var(--good); }
 </style>
 
 </head>
@@ -320,6 +321,7 @@ const dueChip = iso => {
   const gap = d >= 1 ? `${d} day${d > 1 ? 's' : ''}` : `${Math.max(hrs, 1)} h`;
   return `<div class="due ${ms < 0 ? 'late' : ms < 7 * 864e5 ? 'soon' : ''}">Due ${esc(day(iso))} · ${ms < 0 ? `overdue ${gap}` : `in ${gap}`}</div>`;
 };
+const sentChip = r => { const d = r.delivery; const ok = d && ['sms', 'email'].filter(k => d[k] === 'sent'); return ok?.length ? `<div class="sentok">Link sent by ${ok.map(k => (k === 'sms' ? 'SMS' : 'email')).join(' and ')}</div>` : d && Object.values(d).some(v => String(v).startsWith('failed')) ? '<div class="due late">Link could not be sent</div>' : ''; };
 const label = r => r.name ?? (r.ref ? `${CH[r.channel] ?? 'Enquiry'} ${r.ref}` : 'Caller');
 const mins = m => (m == null ? '—' : m < 90 ? `${m} min` : m < 2880 ? `${Math.round(m / 60)} h` : `${Math.round(m / 1440)} days`);
 
@@ -335,6 +337,7 @@ function renderBoard() {
       ${r.progress ? `<p class="prog">${esc(r.progress)}</p>` : ''}
       ${r.next ? `<div class="next">${esc(r.next)}</div>` : ''}
       ${dueChip(r.due)}
+      ${sentChip(r)}
       ${r.consultation === 'canceled' ? '<div class="small" style="color:var(--bad)">consultation canceled</div>' : ''}
       ${r.consultationStart ? `<div class="small">Consultation ${esc(fmt(r.consultationStart))}</div>` : ''}
       <div class="links">${r.crm === 'synced' && r.crmUrl ? `<a href="${esc(r.crmUrl)}" target="_blank" rel="noopener">HubSpot ↗</a>` : '<span></span>'}<span class="acts"><button class="tbtn" data-tr="${r.id}">Transcript</button><a href="?lead=${encodeURIComponent(r.id)}">Open lead</a></span></div>

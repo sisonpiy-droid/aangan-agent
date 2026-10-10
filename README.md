@@ -156,11 +156,12 @@ name/email prefilled. `consultation_status = link_ready`.
 
 | Option | Status |
 |---|---|
+| **Automatic SMS and email** the moment a qualified call ends (`lib/deliver.js`): SMS to the caller ID through Twilio, email through Resend when the caller gave an address | ✅ built, switches on when `TWILIO_*` / `RESEND_*` are set. The result shows in the Telegram note and on the lead card; the HubSpot task becomes "check they booked" |
 | **One-tap email** (`mailto:` with the link prefilled) when the caller gave an address; the agent offers it once before closing | ✅ built, still one tap by a designer |
 | Link also on the HubSpot deal and in the task | ✅ built |
 | **Fully automatic email via HubSpot** | ❌ not possible here: sending email from HubSpot's API needs the paid Marketing Hub transactional add-on or a Sales Hub workflow/sequence |
 
-On the call the agent says exactly: *"A designer will send you a link where you can choose a convenient
+On the call the agent says exactly: *"If it's a fit, you'll get a text message shortly with a link to choose a convenient
 consultation time."* It never names or promises a time; only Calendly's own page shows availability.
 
 **Round-robin across designers** (needs a Calendly **Teams** plan; no code change): in Calendly create a **Team** →
