@@ -41,6 +41,9 @@ test('qualified: SMS to the caller ID and email to the address given, both with 
   assert.doesNotMatch(sms.body.Body, /₹|lakh|monday|tomorrow|\d{1,2}(am|pm)/i);
   assert.deepEqual(mail.body.to, ['priya@example.com']);
   assert.match(mail.body.text, /calendly\.com\/aangan\/consultation/);
+  assert.equal(mail.body.subject, 'Thank you for calling Aangan Studio');
+  assert.match(mail.body.html, /Choose a time that suits you/);
+  assert.doesNotMatch(mail.body.text + mail.body.html, /test|₹|lakh|monday|tomorrow/i);
   const saved = (await (await import('../lib/store.js')).findLead({ id: row.id }));
   assert.equal(saved.lead.link_delivery.sms, 'sent');
   assert.equal(saved.lead.link_delivery.email, 'sent');
