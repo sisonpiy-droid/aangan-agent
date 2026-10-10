@@ -156,13 +156,13 @@ name/email prefilled. `consultation_status = link_ready`.
 
 | Option | Status |
 |---|---|
+| **The agent asks for a preferred day and time and an email; after the call we book the closest free Calendly slot** (`lib/schedule.js`, Calendly scheduling API; Google Meet link) and the caller, designers, HubSpot and the dashboard are updated. Falls back to the self-serve link when there is no email, no time asked, nothing free within a day, or Calendly refuses (the reason shows on the lead) | ✅ built. Needs a Calendly plan that includes the scheduling API; verify with one real booking |
 | **Automatic SMS and email** the moment a qualified call ends (`lib/deliver.js`): SMS to the caller ID through Twilio, email through Resend when the caller gave an address | ✅ built, switches on when `TWILIO_*` / `RESEND_*` are set. The result shows in the Telegram note and on the lead card; the HubSpot task becomes "check they booked" |
 | **One-tap email** (`mailto:` with the link prefilled) when the caller gave an address; the agent offers it once before closing | ✅ built, still one tap by a designer |
 | Link also on the HubSpot deal and in the task | ✅ built |
 | **Fully automatic email via HubSpot** | ❌ not possible here: sending email from HubSpot's API needs the paid Marketing Hub transactional add-on or a Sales Hub workflow/sequence |
 
-On the call the agent says exactly: *"If it's a fit, you'll get a text message shortly with a link to choose a convenient
-consultation time."* It never names or promises a time; only Calendly's own page shows availability.
+On the call the agent says exactly: *"Thank you — I've noted everything. If it's a fit, we'll confirm a consultation time close to the one you asked for, by text and email shortly."* It never names or promises a time; only Calendly's own page shows availability.
 
 **Round-robin across designers** (needs a Calendly **Teams** plan; no code change): in Calendly create a **Team** →
 **Round robin** event type with the designers as hosts, copy its link into `CALENDLY_EVENT_URL_RESIDENTIAL`, and set

@@ -339,7 +339,7 @@ function renderBoard() {
       ${dueChip(r.due)}
       ${sentChip(r)}
       ${r.consultation === 'canceled' ? '<div class="small" style="color:var(--bad)">consultation canceled</div>' : ''}
-      ${r.consultationStart ? `<div class="small">Consultation ${esc(fmt(r.consultationStart))}</div>` : ''}
+      ${r.consultationStart ? `<div class="small">Consultation ${esc(fmt(r.consultationStart))}${r.meetUrl ? ` · <a href="${esc(r.meetUrl)}" target="_blank" rel="noopener">Google Meet</a>` : ''}</div>` : ''}
       <div class="links">${r.crm === 'synced' && r.crmUrl ? `<a href="${esc(r.crmUrl)}" target="_blank" rel="noopener">HubSpot ↗</a>` : '<span></span>'}<span class="acts"><button class="tbtn" data-tr="${r.id}">Transcript</button><a href="?lead=${encodeURIComponent(r.id)}">Open lead</a></span></div>
     </article>`).join('') || '<div class="small">Nothing here.</div>'}</div>`;
   }).join('');
