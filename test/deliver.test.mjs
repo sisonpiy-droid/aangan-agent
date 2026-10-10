@@ -74,3 +74,19 @@ test('not qualified: nothing is sent', async () => {
   await processCall(call('T03', 4), as('T03'));
   assert.equal(sent('sms').length + sent('email').length, 0);
 });
+
+test('owner copy: LINK_COPY_TO gets one email per link; Resend\'s test sender is never used on a caller', async () => {
+  net = [];
+  Object.assign(process.env, { LINK_COPY_TO: 'owner@aangan.example', MAIL_FROM: 'Aangan <onboarding@resend.dev>' });
+  const row = await processCall(call('T01', 5), as('T01', { email: 'caller@example.com' }));
+  const mails = sent('email');
+  assert.equal(mails.length, 1, 'only the owner copy: the caller is skipped while the sender is the shared test address');
+  assert.deepEqual(mails[0].body.to, ['owner@aangan.example']);
+  assert.match(mails[0].body.subject, /^Booking link: Priya/);
+  assert.match(mails[0].body.text, /calendly\.com\/aangan\/consultation/);
+  assert.match(mails[0].body.text, /Email: skipped: sender domain not verified yet/);
+  const saved = await (await import('../lib/store.js')).findLead({ id: row.id });
+  assert.equal(saved.lead.link_delivery.owner, 'sent');
+  assert.equal(saved.lead.link_delivery.email.startsWith('skipped'), true);
+  delete process.env.LINK_COPY_TO; process.env.MAIL_FROM = 'Aangan <hi@aangan.example>';
+});
